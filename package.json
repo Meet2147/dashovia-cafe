@@ -1,0 +1,12 @@
+{
+  "name": "dashovia-cafe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "dashovia.café storefront + a lightweight GitHub OAuth endpoint",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}

@@ -286,7 +286,7 @@
         <div class="group-label">Today's Menu</div>
         <nav class="nav">
           <a class="navcat active" href="#on-the-house"><span class="ico">☕</span> On the House <span class="count">8</span></a>
-          <a class="navcat" href="#kadak-chai"><span class="ico">🍵</span> Kadak Chai <span class="count">1</span></a>
+          <a class="navcat" href="#kadak-chai"><span class="ico">🍵</span> Kadak Chai <span class="count">2</span></a>
           <a class="navcat" href="#masala-chai"><span class="ico">🫖</span> Masala Chai <span class="count">3</span></a>
           <a href="https://api.dashovia.app/" target="_blank" rel="noopener"><span class="ico">🧋</span> APIs <span class="count">↗</span></a>
         </nav>
@@ -376,13 +376,19 @@
       </section>
 
       <section class="cat" id="kadak-chai">
-        <div class="cat-head"><div class="cat-ico">🍵</div><h2>Kadak Chai</h2><span class="cat-tag">· capture &amp; PDF</span></div>
+        <div class="cat-head"><div class="cat-ico">🍵</div><h2>Kadak Chai</h2><span class="cat-tag">· native macOS apps</span></div>
         <div class="grid">
           <div class="app"><span class="badge2 pro corner">Pro</span>
             <div class="app-ico">💪</div>
             <div class="app-body"><div class="app-nm">Kadak</div>
               <div class="app-desc">Brew any website into a full-page PDF, plus up to 10 screenshots.</div>
               <div class="app-meta">macOS app · URL → PDF + shots</div></div>
+          </div>
+          <div class="app"><span class="badge2 corner">macOS</span>
+            <div class="app-ico">📄</div>
+            <div class="app-body"><div class="app-nm">ResumeBaker</div>
+              <div class="app-desc">Bake a polished résumé in minutes — pick a template, fill the blanks, export to PDF.</div>
+              <div class="app-meta">macOS app · v1.0.3</div></div>
           </div>
         </div>
       </section>
@@ -500,6 +506,10 @@
         </svg>
         Continue with Google
       </button>
+      <button class="gbtn" id="githubBtn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.4-5.25 5.68.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>
+        Continue with GitHub
+      </button>
       <div class="divider">OR</div>
       <form id="emailForm">
         <input class="email-input" id="emailInput" type="email" placeholder="you@email.com"
@@ -583,7 +593,20 @@
     //    then paste the ID below. Google sign-in then works on your live domain.
     // 2) Full sessions + gating who paid need a backend (Supabase/Firebase/Clerk or
     //    your own with Polar) — wire it where marked in handleCredential()/email submit.
-    const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+    // Public OAuth client IDs. On Render these are served by /api/config from
+    // env vars; the placeholders let the page still render as a static file.
+    let GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+    let GITHUB_CLIENT_ID = "";
+    async function loadAuthConfig() {
+      try {
+        const r = await fetch('/api/config', { cache: 'no-store' });
+        if (r.ok) {
+          const c = await r.json();
+          if (c.googleClientId) GOOGLE_CLIENT_ID = c.googleClientId;
+          if (c.githubClientId) GITHUB_CLIENT_ID = c.githubClientId;
+        }
+      } catch {}
+    }
 
     const modal = document.getElementById('authModal');
     const authNote = document.getElementById('authNote');
@@ -655,7 +678,64 @@
         authNote.textContent = 'Google sign-in loads only on your deployed site (blocked in this preview).';
       }
     });
-    window.addEventListener('load', () => setTimeout(initGoogle, 500));
+    // ---------------- GitHub (redirect flow via /api/auth/github) ----------------
+    // GitHub's OAuth requires a server-side code→token exchange (the client secret
+    // must never reach the browser), so the button redirects to GitHub and the
+    // returned ?code= is exchanged by our /api/auth/github endpoint on Render.
+    const githubBtn = document.getElementById('githubBtn');
+    const ghRedirectUri = () => location.origin + location.pathname;
+
+    function startGithub() {
+      if (!GITHUB_CLIENT_ID) {
+        authNote.textContent = 'Set GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET on the server to enable GitHub sign-in.';
+        return;
+      }
+      const state = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
+      sessionStorage.setItem('dashovia_gh_state', state);
+      const p = new URLSearchParams({
+        client_id: GITHUB_CLIENT_ID,
+        redirect_uri: ghRedirectUri(),
+        scope: 'read:user user:email',
+        state,
+        allow_signup: 'true'
+      });
+      location.href = 'https://github.com/login/oauth/authorize?' + p.toString();
+    }
+    if (githubBtn) githubBtn.addEventListener('click', startGithub);
+
+    async function handleGithubCallback() {
+      const url = new URL(location.href);
+      const code = url.searchParams.get('code');
+      const state = url.searchParams.get('state');
+      if (!code || !state) return;
+      const saved = sessionStorage.getItem('dashovia_gh_state');
+      sessionStorage.removeItem('dashovia_gh_state');
+      // Always strip code/state from the address bar, whatever the outcome.
+      url.searchParams.delete('code'); url.searchParams.delete('state');
+      history.replaceState(null, '', url.pathname + (url.search || '') + url.hash);
+      if (!saved || saved !== state) {
+        openModal(); authNote.textContent = 'GitHub sign-in expired — please try again.';
+        return;
+      }
+      try {
+        const r = await fetch('/api/auth/github', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, redirect_uri: ghRedirectUri() })
+        });
+        const data = await r.json();
+        if (!r.ok || data.error) throw new Error(data.error || 'exchange failed');
+        setUser({ provider: 'github', login: data.login, name: data.name || data.login,
+                  email: data.email || '', picture: data.avatarUrl || '' });
+      } catch (e) {
+        openModal();
+        authNote.textContent = 'Could not complete GitHub sign-in.' + (e && e.message ? ' (' + e.message + ')' : '');
+      }
+    }
+
+    loadAuthConfig();
+    handleGithubCallback();
+    window.addEventListener('load', () => setTimeout(initGoogle, 800));
     renderAuth();
 
     // ---------------- App detail pages (CalX-style) ----------------
@@ -673,6 +753,7 @@
       'cubby':     {icon:'📦', cat:'Masala Chai · Live web apps', catId:'masala-chai', kind:'web', open:'https://cubby.dashovia.app', desc:'Your little corner of the web — stash links, files and notes in one tidy cubby. (Confirm tagline & URL.)'},
       'cadence':   {icon:'🥁', cat:'Masala Chai · Live web apps', catId:'masala-chai', kind:'web', open:'https://cadence.dashovia.app', desc:'Keep your team in rhythm — async standups and one calm daily digest, delivered where you already work.'},
       'cairn':     {icon:'🗿', cat:'Masala Chai · Live web apps', catId:'masala-chai', kind:'web', open:'https://cairn.dashovia.app', desc:'Mark the path — lightweight milestones and progress markers for any project. (Confirm tagline & URL.)'},
+      'resumebaker':{icon:'📄', cat:'Kadak Chai · Native macOS apps', catId:'kadak-chai', kind:'macos', version:'1.0.3', updated:'2026', dmg:'downloads/ResumeBaker_1.0.3.dmg', desc:'Bake a polished résumé in minutes — pick a template, fill in the blanks and export a clean, recruiter-ready PDF. A native macOS app.'},
     };
 
     const el = (id) => document.getElementById(id);
@@ -691,11 +772,11 @@
       });
     });
 
-    function makeBtn(cls, label, { href, blank, onClick, version, disabled } = {}) {
+    function makeBtn(cls, label, { href, blank, onClick, version, disabled, download } = {}) {
       const node = href ? document.createElement('a') : document.createElement('button');
       node.className = cls;
       node.innerHTML = label + (version ? ' <span class="vtag">v' + version + '</span>' : '');
-      if (href) { node.href = href; if (blank) { node.target = '_blank'; node.rel = 'noopener'; } }
+      if (href) { node.href = href; if (blank) { node.target = '_blank'; node.rel = 'noopener'; } if (download) node.setAttribute('download', ''); }
       else { node.type = 'button'; }
       if (onClick) node.addEventListener('click', onClick);
       if (disabled) { node.style.opacity = '.6'; node.style.cursor = 'default'; }
@@ -730,9 +811,14 @@
       const note = el('dNote'); note.innerHTML = '';
 
       if (a.kind === 'macos') {
-        acts.appendChild(makeBtn('btn-primary', '⬇&nbsp; Download for macOS', { onClick: goPricing, version: a.version }));
-        acts.appendChild(makeBtn('btn-secondary', 'Buy ' + NAMEBY[key] + ' · $' + a.price, { onClick: goPricing }));
-        note.innerHTML = 'One-off purchase, yours to keep on one device. <a href="#pricing" data-close>Or unlock the whole menu ' + PLAN + '.</a>';
+        acts.appendChild(makeBtn('btn-primary', '⬇&nbsp; Download for macOS',
+          a.dmg ? { href: a.dmg, download: true, version: a.version } : { onClick: goPricing, version: a.version }));
+        if (a.price) {
+          acts.appendChild(makeBtn('btn-secondary', 'Buy ' + NAMEBY[key] + ' · $' + a.price, { onClick: goPricing }));
+          note.innerHTML = 'One-off purchase, yours to keep on one device. <a href="#pricing" data-close>Or unlock the whole menu ' + PLAN + '.</a>';
+        } else {
+          note.innerHTML = 'Free download — a native macOS app, yours to keep. <a href="#pricing" data-close>Or unlock the whole menu ' + PLAN + '.</a>';
+        }
       } else if (a.kind === 'web') {
         acts.appendChild(makeBtn('btn-primary', 'Open app&nbsp; ↗', { href: a.open, blank: true }));
         if (a.web2) acts.appendChild(makeBtn('btn-secondary', 'Web app&nbsp; ↗', { href: a.web2, blank: true }));
