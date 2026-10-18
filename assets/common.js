@@ -18,7 +18,7 @@
 <nav class="land-nav" id="nav"><div class="in">
   <a class="brand" href="/" id="home"><span class="logo">🫖</span>dashovia<span class="dot">.café</span></a>
   <span class="grow"></span>
-  <a class="lnk hide-md" href="/#menu">Menu</a>
+  <a class="lnk hide-md" href="/menu">Menu</a>
   <a class="lnk hide-md" href="/#pricing">Pricing</a>
   <a class="lnk hide-md" href="/blog">Blog</a>
   <button class="btn ghost sm" id="themeBtn" aria-label="Toggle dark mode">🌓</button>

@@ -70,17 +70,22 @@ service's **Settings ▸ Custom Domains**, and point your DNS at Render.
 
 ## Chai menu
 
-App categories are chai types; pricing tiers are chai sizes.
+Apps are organized like getapps.cafe: aisles named after chai, each with a plain
+subtitle. Everything is defined in `assets/apps.js`.
 
-| Category | Idea | Apps |
-|----------|------|------|
-| 🫖 Full Chai | the whole pot | sitepdf |
-| 💪 Kadak Chai | strong capture | Kadak |
-| 🖤 Sulaimani | black, no milk = no deps | htmlpdf |
-| 🔥 Adrak Chai | a protective kick | redactor, publishkey |
-| 🧡 Masala Chai | the blend / APIs | promptkit, vectorlite |
-| 🌿 Elaichi Chai | aromatic utilities | chunkwise |
-| ✨ Kesar Chai | premium / saffron | Kesar API (soon) |
+| Aisle | Subtitle | Apps |
+|-------|----------|------|
+| 🫖 Masala Chai | Capture & Guides | Kadak, Stepwise, Cadence |
+| 🍵 Adrak Chai | Everyday Essentials | Cubby, ResumeBaker |
+| 🌿 Tulsi Chai | Health & Focus | Cairn (coming soon) |
+| 🖤 Sulaimani | PDF & Web Tools (free) | htmlpdf, sitepdf, publishkey |
+| ✨ Kesar Chai | AI Builder Kit (free) | redactor, chunkwise, promptkit, vectorlite, llmparse |
+
+Barista's Picks (collections): Guides & docs, Private by design, Build with LLMs.
+
+URLs: `/menu` (everything, searchable), `/menu/<aisle>`, `/picks/<collection>`,
+`/app/<key>`. They're all served by `index.html` and rendered by
+`assets/menu.js`. To add an app, add one entry to `APPS` in `assets/apps.js`.
 
 ## Pages
 
@@ -125,5 +130,4 @@ node -e "console.log(require('crypto').createHash('sha256').update('dashovia-ref
 
 - **Payments:** Dodo Payments (see above).
 - **Theme:** follows the visitor's OS light/dark; the ☀︎/☾ button overrides it.
-- **Editing the menu:** add an entry to `APPS` in `index.html`. Cards, filters,
-  search and the detail page are generated from it.
+- **Editing the menu:** add an entry to `APPS` in `assets/apps.js`.

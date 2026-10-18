@@ -21,7 +21,7 @@
 <body>
 <div id="site-nav"></div>
 
-<div id="menuView">
+<div id="homeView">
   <main class="land">
     <section class="hero">
       <div>
@@ -30,7 +30,7 @@
         <p class="lead">One subscription, every premium Dashovia app: native, private, on-device Mac apps,
           plus the dev libraries we use ourselves. The free ones are always on the house.</p>
         <div class="row wrap" style="margin-top:22px">
-          <a class="btn primary lg" href="#menu">Browse the menu ☕</a>
+          <a class="btn primary lg" href="/menu">Browse the menu ☕</a>
           <a class="btn lg" href="#pricing">Pick your cup</a>
         </div>
         <div class="row wrap small muted" style="margin-top:18px;gap:16px">
@@ -62,20 +62,35 @@
   <div class="marquee" aria-hidden="true"><div id="marq"></div></div>
 
   <main class="land">
+    <section class="section" id="free">
+      <div class="shelf-head">
+        <div><h2>On the House <span class="muted">· Free tools</span></h2>
+          <p class="muted" style="margin:6px 0 0">Free to use, no account needed.</p></div>
+        <div class="arrows"><button class="btn sm" data-scroll="shelfFree" data-dir="prev" aria-label="Scroll left">‹</button><button class="btn sm" data-scroll="shelfFree" aria-label="Scroll right">›</button></div>
+      </div>
+      <div class="shelf" id="shelfFree"></div>
+    </section>
+
+    <section class="section" id="mac">
+      <div class="shelf-head">
+        <div><h2>Fresh Pours <span class="muted">· Mac apps</span></h2>
+          <p class="muted" style="margin:6px 0 0">Native, private and all on one membership.</p></div>
+        <div class="arrows"><button class="btn sm" data-scroll="shelfMac" data-dir="prev" aria-label="Scroll left">‹</button><button class="btn sm" data-scroll="shelfMac" aria-label="Scroll right">›</button></div>
+      </div>
+      <div class="shelf" id="shelfMac"></div>
+    </section>
+
     <section class="section" id="menu">
-      <h2>Today's menu. <span class="muted">Pick anything.</span></h2>
-      <p class="muted" style="max-width:640px;margin:0">Native macOS apps and free developer tools, all brewed in-house.
-        Tap any card for details, downloads and links.</p>
-      <div class="toolbar">
-        <input id="search" class="search" type="search" placeholder="🔍  Search apps…" aria-label="Search apps" />
-        <div class="filters" id="filters" role="tablist" aria-label="Filter by category"></div>
-      </div>
-      <div id="cats"></div>
-      <div class="empty-state" id="noResults" hidden>
-        <div style="font-size:34px">🫗</div>
-        <h3 style="margin:6px 0">Nothing on the menu by that name.</h3>
-        <p class="muted" style="margin:0">Try another search, or clear the filter.</p>
-      </div>
+      <h2>The menu <span class="muted">· by aisle</span></h2>
+      <p class="muted" style="max-width:640px;margin:0">Every app sorted by what it helps you do. Pick an aisle, or browse everything.</p>
+      <div class="cat-grid" id="catGrid"></div>
+      <a class="btn primary lg" href="/menu" style="margin-top:22px">Browse the full menu · <span id="menuCount"></span> apps →</a>
+    </section>
+
+    <section class="section" id="picks">
+      <h2>Barista's Picks <span class="muted">· Collections</span></h2>
+      <p class="muted" style="max-width:640px;margin:0">Hand-picked sets from across the menu.</p>
+      <div class="cat-grid" id="picksGrid"></div>
     </section>
 
     <section class="section" id="why">
@@ -161,6 +176,21 @@
       <details><summary>Which payment methods do you accept?</summary><p>Checkout is run by Dodo Payments: major cards, UPI, Apple Pay and Google Pay, with local taxes handled automatically.</p></details>
     </section>
 
+    <section class="section" id="story" style="max-width:780px">
+      <span class="chip violet">☕ The story</span>
+      <h2 style="margin-top:12px">What is dashovia.café?</h2>
+      <div class="prose muted">
+        <p>dashovia.café is a subscription for a growing menu of native Mac apps, plus a shelf of free developer tools.
+          Instead of buying apps one by one, a single plan unlocks every premium app on the menu: <b>Cutting Chai</b> is
+          $3.99/month for one device and <b>Full Kettle</b> is $7.99/month for up to five ($1.99 and $3.99 a month paid
+          yearly). Both start with a 7-day free trial.</p>
+        <p>The menu covers capture and guides (<a href="/app/kadak">Kadak</a>, <a href="/app/stepwise">Stepwise</a>,
+          <a href="/app/cadence">Cadence</a>), everyday essentials (<a href="/app/cubby">Cubby</a>,
+          <a href="/app/resumebaker">ResumeBaker</a>) and health (<a href="/app/cairn">Cairn</a>, coming soon), with
+          more apps added over time. Every app is built to keep your data on your own Mac.</p>
+      </div>
+    </section>
+
     <section class="section">
       <div class="hero-card">
         <div class="blob"></div><div class="blob b2"></div>
@@ -172,24 +202,12 @@
   </main>
 </div>
 
-<main class="land detail" id="detailView" hidden>
-  <button class="btn sm" id="detailBack">← Back to the menu</button>
-  <div class="detail-head">
-    <div class="detail-ico" id="dIco">☕</div>
-    <div>
-      <span class="chip violet" id="dCat"></span>
-      <h1 id="dName"></h1>
-      <p class="detail-desc" id="dDesc"></p>
-      <div class="detail-meta" id="dMeta"></div>
-    </div>
+<div id="menuShell" hidden>
+  <div class="shell-grid">
+    <aside class="side" id="side" aria-label="Menu categories"></aside>
+    <main class="shell-main detail" id="shellMain"></main>
   </div>
-  <div class="detail-actions" id="dActions"></div>
-  <p class="detail-note" id="dNote"></p>
-  <div id="dShots" hidden style="margin-top:40px">
-    <h2 style="margin:0">Screenshots</h2>
-    <div class="shots-row" id="dShotsRow"></div>
-  </div>
-</main>
+</div>
 
 <footer class="foot" id="site-foot-static">
   <div class="row wrap" style="justify-content:center;gap:6px 16px;margin-bottom:8px">
@@ -200,148 +218,27 @@
 </footer>
 
 <script src="/assets/common.js"></script>
+<script src="/assets/apps.js"></script>
 <script>
-  // =====================================================================
-  //  EDIT HERE — the menu (categories and apps). Cards, filters, search and
-  //  detail pages are generated from these lists.
-  // =====================================================================
-  const CATS = [
-    { id: 'kadak-chai',   icon: '🍵', name: 'Kadak Chai',   tag: 'native macOS apps' },
-    { id: 'on-the-house', icon: '☕', name: 'On the House', tag: 'free developer tools' },
-  ];
-
-  // kind: macos | web | python | cli
-  // badge: Pro | Free | Live | macOS | Soon
-  // url: app website · dmg: direct download link
-  const APPS = [
-    { key: 'kadak', name: 'Kadak', icon: '💪', cat: 'kadak-chai', kind: 'macos', badge: 'Pro', version: '1.0.0', buy: 'kadak',
-      short: 'Brew any website into a full-page PDF, plus up to 10 screenshots.',
-      desc: 'Brew any website into a full-page PDF, plus up to 10 screenshots. A native macOS app with a clean, one-screen flow.',
-      meta: 'macOS app · URL → PDF + shots', shots: true },
-    { key: 'resumebaker', name: 'ResumeBaker', icon: '📄', cat: 'kadak-chai', kind: 'macos', badge: 'macOS', version: '1.0.3',
-      short: 'Bake a polished résumé in minutes: pick a template, fill the blanks, export to PDF.',
-      desc: 'Bake a polished résumé in minutes. Pick a template, fill in the blanks and export a clean, recruiter-ready PDF. A native macOS app.',
-      meta: 'macOS app · v1.0.3', dmg: 'downloads/ResumeBaker_1.0.3.dmg' },
-
-    { key: 'stepwise', name: 'Stepwise', icon: '🪜', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
-      short: 'Record once, get a step-by-step guide with captions, screenshots and a PDF.',
-      desc: 'Stepwise turns the clicks you make into a captioned, screenshotted guide, keeps the screen recording, and exports a PDF. A private, on-device Mac app.',
-      meta: 'macOS app · clicks → guide + PDF', url: 'https://stepwise.dashovia.app' },
-    { key: 'cadence', name: 'Cadence', icon: '🎬', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
-      short: 'Screen guides in 5 steps, 1 minute each, stitched into one MP4.',
-      desc: 'Cadence records structured screen guides: 5 steps, a hard 1-minute cap per step, stitched into one MP4. No editing. No cloud.',
-      meta: 'macOS app · screen guides → MP4', url: 'https://cadence.dashovia.app' },
-    { key: 'cubby', name: 'Cubby', icon: '📦', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
-      short: 'Your stuff, in its place. A menu-bar panel of values, one keystroke away.',
-      desc: 'Cubby is a native macOS menu-bar app. Press a hotkey, get an elegant panel of your named compartments (phone, API keys, bank details) and copy any value instantly. 100% on-device.',
-      meta: 'macOS menu-bar app', url: 'https://cubby.dashovia.app' },
-    { key: 'cairn', name: 'Cairn', icon: '🗿', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
-      short: 'Desk wellness: on-device posture, eye and stretch-break coaching.',
-      desc: 'Cairn watches your webcam on-device with MediaPipe AI and coaches your posture, eyes, and stretch breaks. Private, offline, macOS.',
-      meta: 'macOS app · desk wellness', url: 'https://cairn.dashovia.app' },
-
-    { key: 'htmlpdf', name: 'htmlpdf', icon: '🖤', cat: 'on-the-house', kind: 'python', badge: 'Free',
-      short: 'HTML → PDF with zero dependencies. Nothing to install.',
-      desc: 'Convert HTML to a paginated PDF using only the Python standard library: no browser, no C libraries, no dependencies. Headings, lists, quotes, code, links and automatic pagination.',
-      meta: 'Python library' },
-    { key: 'sitepdf', name: 'sitepdf', icon: '🕸️', cat: 'on-the-house', kind: 'cli', badge: 'Free',
-      short: 'Crawl a whole site (images, JS, real layout) into one bookmarked PDF.',
-      desc: 'Crawl a whole website and save it, images, JavaScript and real layout included, as one bookmarked PDF using headless Chromium.',
-      meta: 'CLI · Python' },
-    { key: 'redactor', name: 'redactor', icon: '🛡️', cat: 'on-the-house', kind: 'python', badge: 'Free',
-      short: 'Mask PII & secrets before text hits an LLM, then restore the reply.',
-      desc: 'Detect and reversibly mask PII and secrets in text before it reaches an LLM, then restore the model’s reply.',
-      meta: 'Python library' },
-    { key: 'chunkwise', name: 'chunkwise', icon: '🌿', cat: 'on-the-house', kind: 'python', badge: 'Free',
-      short: 'Token-aware, boundary-respecting text chunking with overlap and metadata.',
-      desc: 'Token-aware, boundary-respecting text chunking (recursive, sentence, markdown) with overlap, metadata and a pluggable token counter.',
-      meta: 'Python library' },
-    { key: 'promptkit', name: 'promptkit', icon: '🧩', cat: 'on-the-house', kind: 'python', badge: 'Free',
-      short: 'Prompt templates with validation, few-shot rendering and a versioned registry.',
-      desc: 'A prompt template engine: required-variable validation, few-shot rendering, a chat/message builder and a versioned registry.',
-      meta: 'Python library' },
-    { key: 'vectorlite', name: 'vectorlite', icon: '🔎', cat: 'on-the-house', kind: 'python', badge: 'Free',
-      short: 'Tiny in-memory vector store: cosine, top-k, MMR re-ranking. No numpy.',
-      desc: 'A tiny in-memory vector store: cosine / dot / euclidean, top-k, metadata filtering, MMR re-ranking and JSON persistence. No numpy.',
-      meta: 'Python library' },
-    { key: 'llmparse', name: 'llmparse', icon: '🧬', cat: 'on-the-house', kind: 'python', badge: 'Free',
-      short: 'Extract & repair JSON from messy LLM output, then coerce it to a schema.',
-      desc: 'Robustly extract and repair JSON from messy LLM text (code fences, prose, trailing commas, single quotes) and coerce it to a schema.',
-      meta: 'Python library' },
-    { key: 'publishkey', name: 'publishkey', icon: '🚀', cat: 'on-the-house', kind: 'cli', badge: 'Free',
-      short: 'Press one key, ship your web app. Detects the framework and deploys.',
-      desc: 'Press one key, ship your web app. Detects FastAPI / Flask / Streamlit / Django and deploys it to the cloud.',
-      meta: 'CLI tool' },
-  ];
-  // =====================================================================
-
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const BADGE_CLASS = { Pro: 'violet', Free: 'ok', Live: 'lime', macOS: '', Soon: '' };
-
-  const toast = Cafe.toast;
-
-  // ---------- marquee
-  const words = ['☕ apps, served fresh', 'Kadak', '🍎 native macOS', 'ResumeBaker', 'Stepwise', '🫖 one subscription',
-    'Cadence', 'Cubby', 'Cairn', '🔒 on-device', 'htmlpdf', '🐍 free tools', 'sitepdf', 'redactor', 'chunkwise', '🔥 updates included', 'promptkit', 'vectorlite', 'llmparse', 'publishkey'];
-  const run = words.map((w, i) => `<span class="${i % 2 ? 'alt' : ''}">${esc(w)}</span>`).join('');
-  $('marq').innerHTML = run + run;
-
-  // ---------- menu
-  let activeCat = 'all';
-  function appCard(a) {
-    return `<button class="card feature app" data-key="${esc(a.key)}">
-      <div class="top"><div class="ic">${esc(a.icon)}</div><span class="chip ${BADGE_CLASS[a.badge] || ''}">${esc(a.badge)}</span></div>
-      <h4>${esc(a.name)}</h4><p>${esc(a.short)}</p><div class="meta">${esc(a.meta)}</div></button>`;
-  }
-  function renderFilters() {
-    const all = [{ id: 'all', icon: '✨', name: 'Everything' }, ...CATS];
-    $('filters').innerHTML = all.map((c) =>
-      `<button class="chip filter ${c.id === activeCat ? 'on' : ''}" role="tab" aria-selected="${c.id === activeCat}" data-cat="${c.id}">${esc(c.icon)} ${esc(c.name)}</button>`).join('');
-  }
-  function renderMenu() {
-    const q = $('search').value.trim().toLowerCase();
-    let shown = 0;
-    $('cats').innerHTML = CATS.filter((c) => activeCat === 'all' || c.id === activeCat).map((c) => {
-      const apps = APPS.filter((a) => a.cat === c.id &&
-        (!q || [a.name, a.short, a.meta, a.badge].join(' ').toLowerCase().includes(q)));
-      shown += apps.length;
-      if (!apps.length) return '';
-      return `<div class="cat" id="${c.id}">
-        <div class="cat-head"><div class="cat-ico">${esc(c.icon)}</div><h3>${esc(c.name)}</h3><span class="muted">· ${esc(c.tag)}</span></div>
-        <div class="feature-grid">${apps.map(appCard).join('')}</div></div>`;
-    }).join('');
-    $('noResults').hidden = shown > 0;
-  }
-  $('filters').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-cat]'); if (!b) return;
-    activeCat = b.dataset.cat; renderFilters(); renderMenu();
-  });
-  $('search').addEventListener('input', renderMenu);
-  $('cats').addEventListener('click', (e) => {
-    const card = e.target.closest('[data-key]'); if (card) showDetail(card.dataset.key);
-  });
-  renderFilters(); renderMenu();
-
-  // ---------- pricing toggle
+  // ---------- pricing toggle (home page)
   let period = 'annual';
   function setPeriod(p) {
     period = p;
     const isA = p === 'annual';
-    $('annual').classList.toggle('on', isA); $('monthly').classList.toggle('on', !isA);
-    $('annual').setAttribute('aria-selected', isA); $('monthly').setAttribute('aria-selected', !isA);
+    const an = document.getElementById('annual'), mo = document.getElementById('monthly');
+    an.classList.toggle('on', isA); mo.classList.toggle('on', !isA);
+    an.setAttribute('aria-selected', isA); mo.setAttribute('aria-selected', !isA);
     document.querySelectorAll('.price [data-m]').forEach((el) => { el.textContent = '$' + el.dataset[isA ? 'a' : 'm']; });
     document.querySelectorAll('.billed[data-m]').forEach((el) => { el.textContent = el.dataset[isA ? 'a' : 'm']; });
   }
-  $('annual').addEventListener('click', () => setPeriod('annual'));
-  $('monthly').addEventListener('click', () => setPeriod('monthly'));
+  document.getElementById('annual').addEventListener('click', () => setPeriod('annual'));
+  document.getElementById('monthly').addEventListener('click', () => setPeriod('monthly'));
 
-  // ---------- checkout (Dodo Payments via our server)
-  async function checkout(plan, btn) {
+  // ---------- checkout (Dodo Payments via our server; it reads the buyer's email from their session)
+  window.CafeCheckout = async function (plan, btn) {
     const label = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Brewing checkout…'; }
     try {
-      // The server takes the buyer's email from their session, if signed in.
       const r = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan, period, ref: Cafe.getRef() }),
@@ -350,102 +247,23 @@
       if (!r.ok || !data.checkout_url) throw new Error(data.error || 'Checkout is not available right now.');
       location.href = data.checkout_url;
     } catch (e) {
-      toast(e.message || 'Checkout failed.', 'bad');
+      Cafe.toast(e.message || 'Checkout failed.', 'bad');
       if (btn) { btn.disabled = false; btn.textContent = label; }
     }
-  }
-  document.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => checkout(b.dataset.plan, b)));
+  };
+  document.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => CafeCheckout(b.dataset.plan, b)));
 
-  // Dodo sends buyers back with ?status=… after checkout.
+  // Dodo sends buyers back with ?checkout=done&status=… after paying.
   (function handleCheckoutReturn() {
     const url = new URL(location.href);
     if (url.searchParams.get('checkout') !== 'done') return;
     const status = (url.searchParams.get('status') || '').toLowerCase();
-    if (['succeeded', 'active', 'processing'].includes(status) || !status) toast('Order received. Check your email for your receipt ☕', 'ok');
-    else toast('Payment didn’t go through. No charge was made.', 'bad');
+    if (!status || ['succeeded', 'active', 'processing'].includes(status)) Cafe.toast('Order received. Check your email for your receipt ☕', 'ok');
+    else Cafe.toast('Payment didn’t go through. No charge was made.', 'bad');
     ['checkout', 'status', 'payment_id', 'subscription_id', 'email'].forEach((k) => url.searchParams.delete(k));
     history.replaceState(null, '', url.pathname + url.search + url.hash);
   })();
-
-  // ---------- app detail view
-  const BY_KEY = Object.fromEntries(APPS.map((a) => [a.key, a]));
-  const KIND_LABEL = { python: 'Python library', cli: 'CLI tool', macos: 'macOS app' };
-
-  function makeBtn(cls, label, { href, onClick, download } = {}) {
-    const n = document.createElement(href ? 'a' : 'button');
-    n.className = 'btn ' + cls;
-    n.textContent = label;
-    if (href) {
-      n.href = href;
-      if (download) n.setAttribute('download', '');
-      else if (/^https?:/.test(href)) { n.target = '_blank'; n.rel = 'noopener'; }
-    } else n.type = 'button';
-    if (onClick) n.addEventListener('click', onClick);
-    return n;
-  }
-  function showDetail(key) {
-    const a = BY_KEY[key]; if (!a) return;
-    const cat = CATS.find((c) => c.id === a.cat);
-    $('dIco').textContent = a.icon;
-    $('dCat').textContent = cat.icon + ' ' + cat.name + ' · ' + a.badge;
-    $('dName').textContent = a.name;
-    $('dDesc').textContent = a.desc;
-    $('dMeta').textContent = a.version ? KIND_LABEL[a.kind] + ' · v' + a.version : KIND_LABEL[a.kind];
-
-    const acts = $('dActions'); acts.innerHTML = '';
-    const note = $('dNote'); note.textContent = '';
-
-    if (a.kind === 'macos') {
-      if (a.dmg) acts.appendChild(makeBtn('primary lg', '⬇ Download for macOS', { href: a.dmg, download: true }));
-      if (a.url) acts.appendChild(makeBtn(a.dmg ? 'lg' : 'primary lg', 'Visit website ↗', { href: a.url }));
-      if (a.buy) {
-        acts.appendChild(makeBtn('lime lg', 'Buy ' + a.name + ' · $4.99', { onClick: (e) => checkout(a.buy, e.currentTarget) }));
-        note.textContent = 'One-off purchase, yours to keep on one device. Or get it with any café subscription.';
-      } else {
-        acts.appendChild(makeBtn('lg', 'See cups', { onClick: goPricing }));
-        note.textContent = 'A native, on-device Mac app. Included with every café subscription.';
-      }
-    } else {
-      note.textContent = 'On the house: free to use, no account needed.';
-    }
-
-    $('dShots').hidden = !a.shots;
-    if (a.shots) buildShots();
-
-    $('menuView').hidden = true;
-    $('detailView').hidden = false;
-    scrollTo(0, 0);
-    history.replaceState(null, '', '#app/' + encodeURIComponent(key));
-    document.title = a.name + ' · Dashovia Café';
-  }
-  function hideDetail() {
-    $('detailView').hidden = true; $('menuView').hidden = false;
-    document.title = 'Dashovia Café · apps, served fresh';
-  }
-  function goPricing() { hideDetail(); history.replaceState(null, '', '#pricing'); $('pricing').scrollIntoView(); }
-
-  $('detailBack').addEventListener('click', () => { hideDetail(); history.replaceState(null, '', '#menu'); $('menu').scrollIntoView(); });
-
-  function buildShots() {
-    const samples = [
-      '<span class="c"># Welcome to Kadak</span>\n\n<span class="s">1.</span> Paste a URL\n<span class="s">2.</span> Pick screenshots (0–10)\n<span class="s">3.</span> Brew → PDF + PNGs\n\n<span class="c">Saved to ~/Downloads/Kadak/</span>',
-      'Screenshots  <span class="f">▓▓▓▓▓▓▓▓</span>░░  8/10\n\nexample.com … <span class="s">loaded</span>\nExporting PDF … <span class="s">done</span>\n<span class="s">✓</span> example.com.pdf\n<span class="s">✓</span> example.com-01.png … -08.png',
-    ];
-    $('dShotsRow').innerHTML = samples.map((s) =>
-      `<div class="shot"><div class="mock"><div class="dots"><i></i><i></i><i></i></div><div class="code">${s}</div></div></div>`).join('');
-  }
-
-  // #app/<key> opens a detail page; any other #section link closes it and scrolls there.
-  function routeFromHash() {
-    if (location.hash.startsWith('#app/')) return showDetail(decodeURIComponent(location.hash.slice(5)));
-    if (!$('detailView').hidden) {
-      hideDetail();
-      const target = location.hash && document.getElementById(location.hash.slice(1));
-      if (target) target.scrollIntoView(); else scrollTo(0, 0);
-    }
-  }
-  addEventListener('hashchange', routeFromHash);
-  routeFromHash();
 </script>
+<script src="/assets/menu.js"></script>
 </body>
 </html>
