@@ -2,7 +2,6 @@
 // Pages include <div id="site-nav"></div> and <div id="site-foot"></div>.
 (function () {
   const SUPPORT_EMAIL = 'contact@dashovia.app';
-  const APIS_URL = 'https://api.dashovia.app/';
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22,7 +21,6 @@
   <a class="lnk hide-md" href="/#menu">Menu</a>
   <a class="lnk hide-md" href="/#pricing">Pricing</a>
   <a class="lnk hide-md" href="/blog">Blog</a>
-  <a class="lnk hide-md" href="${APIS_URL}" target="_blank" rel="noopener">APIs ↗</a>
   <button class="btn ghost sm" id="themeBtn" aria-label="Toggle dark mode">🌓</button>
   <div class="user-wrap" id="authSlot"><button class="btn sm" id="signinBtn">Sign in</button></div>
   <a class="btn primary sm hide-sm" href="/#pricing">Start free</a>

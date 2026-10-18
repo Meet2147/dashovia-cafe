@@ -1,6 +1,6 @@
 # Dashovia Café ☕
 
-**apps, served fresh** — the storefront for the Dashovia family of apps & APIs.
+**apps, served fresh** — the storefront for the Dashovia family of apps.
 
 One subscription, every app on the menu. A warm, café-menu storefront: chai
 categories in the sidebar, "Two cups. No surprises." pricing (Cutting Chai
