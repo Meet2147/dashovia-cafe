@@ -101,7 +101,8 @@
   const note = (msg, err) => { authNote.textContent = msg || ''; authNote.classList.toggle('err', !!err); };
   function openSignIn(message) {
     modal.classList.add('open');
-    note(message || '');
+    const none = !config.googleClientId && !config.githubClientId;
+    note(message || (none ? 'Sign-in is being switched on. Please check back in a little while.' : ''), none && !message);
     renderGoogleButton();
   }
   const closeSignIn = () => modal.classList.remove('open');
@@ -254,9 +255,6 @@
     ready = true;
     setUser(user);
     await handleGithubReturn();
-    if (!config.googleClientId && !config.githubClientId) {
-      note('Sign-in is being set up. Check back soon!');
-    }
   })();
 
   window.Cafe = { toast, esc, openSignIn, onUser, getUser: () => user, getRef, SUPPORT_EMAIL };
