@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support · Dashovia Café</title>
+  <meta name="description" content="Get help with Dashovia apps, billing, refunds and your account." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%96%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script>try { const t = localStorage.getItem('dashovia_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch {}</script>
+  <link rel="stylesheet" href="/assets/site.css" />
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="page">
+<div class="page-hero">
+  <span class="chip violet">💬 Support</span>
+  <h1>How can we help?</h1>
+  <p>Real humans, usually replying within 2 business days.</p>
+</div>
+
+<div class="callout">
+  <h3>📮 Email us</h3>
+  <p class="muted" style="margin:0 0 14px">For anything: app questions, billing, refunds, bugs or feature ideas.
+    Tell us which app and what you expected to happen.</p>
+  <a class="btn primary" href="mailto:contact@dashovia.app">contact@dashovia.app</a>
+</div>
+
+<div class="feature-grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+  <div class="card feature">
+    <div class="ic">🧾</div><h3>Manage your subscription</h3>
+    <p style="margin-bottom:14px">Change plan, update your card, download invoices or cancel.</p>
+    <button class="btn sm" id="supportPortal">Open billing portal</button>
+  </div>
+  <div class="card feature">
+    <div class="ic">💸</div><h3>Get a refund</h3>
+    <p style="margin-bottom:14px">Every payment has a 14-day money-back guarantee.</p>
+    <a class="btn sm" href="/refunds">Refund policy</a>
+  </div>
+  <div class="card feature">
+    <div class="ic">🎁</div><h3>Refer a friend</h3>
+    <p style="margin-bottom:14px">They get 20% off, you get a free month.</p>
+    <a class="btn sm" href="/refer">Get your link</a>
+  </div>
+  <div class="card feature">
+    <div class="ic">🔒</div><h3>Privacy questions</h3>
+    <p style="margin-bottom:14px">See what we collect, or ask us to delete your data.</p>
+    <a class="btn sm" href="/privacy">Privacy policy</a>
+  </div>
+</div>
+
+<section class="faq" style="margin-top:40px">
+  <h2>Common questions</h2>
+  <details><summary>I paid but don't see my receipt.</summary><p>Receipts come from Dodo Payments, our payment partner. Check your spam folder for an email from them. Still nothing? Email us with the address you used at checkout.</p></details>
+  <details><summary>How do I cancel?</summary><p>Sign in, open your account menu and choose "Manage subscription", or use the link in your receipt email. You keep access until the end of the period you've paid for.</p></details>
+  <details><summary>I can't sign in.</summary><p>We use Google and GitHub sign-in. Make sure pop-ups aren't blocked for this site, and try a different browser if it keeps failing. If it still doesn't work, email us and tell us which button you used.</p></details>
+  <details><summary>How many Macs can I use?</summary><p>Cutting Chai covers 1 device, Full Kettle up to 5. A one-time Kadak purchase covers 1 device.</p></details>
+  <details><summary>Is there a student or team discount?</summary><p>Email us and tell us about your situation. We're a small café and happy to talk.</p></details>
+</section>
+</main>
+<div id="site-foot"></div>
+<script src="/assets/common.js"></script>
+<script>
+  document.getElementById('supportPortal').addEventListener('click', async () => {
+    if (!Cafe.getUser()) return Cafe.openSignIn('Sign in with the email you used at checkout to manage your subscription.');
+    try {
+      const r = await fetch('/api/portal', { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || 'Could not open the billing portal.');
+      location.href = d.link;
+    } catch (e) { Cafe.toast(e.message, 'bad'); }
+  });
+</script>
+</body>
+</html>

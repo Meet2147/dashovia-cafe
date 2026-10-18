@@ -1,5 +1,5 @@
-# Render Blueprint — Node web service that serves the static storefront AND
-# provides the GitHub OAuth token exchange (/api/auth/github).
+# Render Blueprint — Node web service that serves the storefront AND runs the
+# API (sign-in, Dodo checkout, webhooks). It must be a Web Service, not a Static Site.
 #
 # In Render: New ▸ Blueprint ▸ connect this repo. After the first deploy, set the
 # OAuth values below in the service's Environment tab (they are marked sync:false
@@ -21,3 +21,27 @@ services:
       # Secret — server only, never sent to the browser
       - key: GITHUB_CLIENT_SECRET
         sync: false
+      # Dodo Payments
+      - key: DODO_PAYMENTS_ENV
+        value: live
+      - key: DODO_PAYMENTS_API_KEY
+        sync: false
+      - key: DODO_PAYMENTS_WEBHOOK_SECRET
+        sync: false
+      - key: DODO_PRODUCT_CUTTING_MONTHLY
+        sync: false
+      - key: DODO_PRODUCT_CUTTING_ANNUAL
+        sync: false
+      - key: DODO_PRODUCT_KETTLE_MONTHLY
+        sync: false
+      - key: DODO_PRODUCT_KETTLE_ANNUAL
+        sync: false
+      - key: DODO_PRODUCT_KADAK
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      # Sessions + referrals
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: REFERRAL_DISCOUNT_CODE
+        value: CAFEFRIEND20

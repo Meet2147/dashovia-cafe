@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Refer & Earn · Dashovia Café</title>
+  <meta name="description" content="Share Dashovia Café: your friend gets 20% off, you get a free month." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%96%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script>try { const t = localStorage.getItem('dashovia_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch {}</script>
+  <link rel="stylesheet" href="/assets/site.css" />
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="page">
+<div class="page-hero">
+  <span class="chip lime">🎁 Refer &amp; Earn</span>
+  <h1>Give 20% off. <span class="muted">Get a free month.</span></h1>
+  <p>Share your link. When a friend buys, they save 20% on their first payment and you get a month on us.</p>
+</div>
+
+<div class="callout" id="refSignedOut">
+  <h3>Sign in to get your link</h3>
+  <p class="muted" style="margin:0 0 14px">It takes one click with Google or GitHub. No password needed.</p>
+  <button class="btn primary" id="refSignIn">Sign in to get my link</button>
+</div>
+
+<div class="callout" id="refSignedIn" hidden>
+  <h3>Your referral link</h3>
+  <p class="muted" style="margin:0">Your code: <b id="refCode" style="font-family:var(--mono);color:var(--ink)"></b></p>
+  <div class="ref-box">
+    <input id="refLink" readonly aria-label="Your referral link" />
+    <button class="btn primary" id="refCopy">Copy link</button>
+  </div>
+  <div class="row wrap" style="margin-top:12px">
+    <a class="btn sm" id="shareWa" target="_blank" rel="noopener">WhatsApp</a>
+    <a class="btn sm" id="shareX" target="_blank" rel="noopener">X / Twitter</a>
+    <a class="btn sm" id="shareMail">Email</a>
+    <button class="btn sm" id="shareNative" hidden>More…</button>
+  </div>
+</div>
+
+<h2 style="margin-top:40px">How it works</h2>
+<ol class="steps">
+  <li><div><b>Share your link</b><br><span class="muted">Send it to friends, post it, put it in your newsletter.</span></div></li>
+  <li><div><b>Your friend saves 20%</b><br><span class="muted">The discount is applied automatically to their first payment, on any plan or on Kadak.</span></div></li>
+  <li><div><b>You get a free month</b><br><span class="muted">Once their payment is 14 days old (past the refund window), email
+    <a href="mailto:contact@dashovia.app?subject=Referral%20reward">contact@dashovia.app</a> from your account email with your code, and we'll add a free month to your plan.</span></div></li>
+</ol>
+
+<div class="prose">
+  <h3>The fine print</h3>
+  <ul>
+    <li>One free month per referred friend who pays. No limit on friends.</li>
+    <li>You can't refer yourself, and the discount can't be combined with other codes.</li>
+    <li>If your friend gets a refund, that reward is cancelled.</li>
+    <li>Full details are in our <a href="/terms">Terms</a>.</li>
+  </ul>
+</div>
+</main>
+<div id="site-foot"></div>
+<script src="/assets/common.js"></script>
+<script>
+  const msg = 'I use Dashovia Café for my Mac apps. Here\'s 20% off your first payment: ';
+  document.getElementById('refSignIn').addEventListener('click', () => Cafe.openSignIn());
+  Cafe.onUser((u) => {
+    const on = !!(u && u.refCode);
+    document.getElementById('refSignedOut').hidden = on;
+    document.getElementById('refSignedIn').hidden = !on;
+    if (!on) return;
+    const link = location.origin + '/?ref=' + u.refCode;
+    document.getElementById('refCode').textContent = u.refCode;
+    document.getElementById('refLink').value = link;
+    document.getElementById('shareWa').href = 'https://wa.me/?text=' + encodeURIComponent(msg + link);
+    document.getElementById('shareX').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(msg) + '&url=' + encodeURIComponent(link);
+    document.getElementById('shareMail').href = 'mailto:?subject=' + encodeURIComponent('20% off Dashovia Café') + '&body=' + encodeURIComponent(msg + link);
+    const native = document.getElementById('shareNative');
+    if (navigator.share) {
+      native.hidden = false;
+      native.onclick = () => navigator.share({ title: 'Dashovia Café', text: msg, url: link }).catch(() => {});
+    }
+  });
+  document.getElementById('refCopy').addEventListener('click', async () => {
+    const input = document.getElementById('refLink');
+    try { await navigator.clipboard.writeText(input.value); Cafe.toast('Link copied 🎉', 'ok'); }
+    catch { input.select(); Cafe.toast('Press ⌘C / Ctrl+C to copy'); }
+  });
+</script>
+</body>
+</html>

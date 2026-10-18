@@ -7,14 +7,39 @@ categories in the sidebar, "Two cups. No surprises." pricing (Cutting Chai
 **$3.99/mo**, Full Kettle **$7.99/mo**, annual −50%), and every Dashovia app on
 the menu.
 
-It's a single static `index.html` — no build step, no dependencies — so it
-deploys anywhere in seconds.
+The look follows a bold, playful style: cream/ink surfaces, violet + lime
+accents, chunky outlined buttons with hard shadows, and a scrolling marquee.
+
+It's one `index.html` plus a tiny dependency-free `server.js` (Node 18+) that
+handles sign-in and Dodo Payments checkout.
+
+## Editing links and apps
+
+Every link on the site lives in the `LINKS` and `APPS` blocks at the top of the
+`<script>` in `index.html`. Leave a value as `''` and the button hides or shows
+"coming soon".
+
+## Payments (Dodo Payments)
+
+1. In the Dodo dashboard, create 5 products: Cutting Chai monthly ($3.99) and
+   annual ($23.88), Full Kettle monthly ($7.99) and annual ($47.88), and Kadak
+   as a one-time product ($4.99).
+2. Set the env vars listed in `.env.example` (API key, product IDs, webhook
+   secret). Start with `DODO_PAYMENTS_ENV=test`, switch to `live` when ready.
+3. Add a webhook in Dodo pointing to `https://YOUR-DOMAIN/api/webhooks/dodo`.
+
+Flow: a pricing button calls `POST /api/checkout`, which creates a Dodo
+checkout session and redirects the buyer to Dodo's hosted page. Dodo sends them
+back to `/?checkout=done`. Signed webhook events are verified and saved to
+`data/customers.json` (not served publicly, gitignored). On Render's free plan
+that file resets on every deploy, so move it to a database before relying on it.
 
 ## Preview locally
 
 ```bash
-python3 -m http.server 8000
-# open http://localhost:8000
+cp .env.example .env   # fill in what you have
+set -a; source .env; set +a; npm start
+# open http://localhost:3000
 ```
 
 ## Deploy
@@ -57,35 +82,48 @@ App categories are chai types; pricing tiers are chai sizes.
 | 🌿 Elaichi Chai | aromatic utilities | chunkwise |
 | ✨ Kesar Chai | premium / saffron | Kesar API (soon) |
 
-## Sign in (Google + email)
+## Pages
 
-The sidebar **Sign in** opens a modal with **Continue with Google** and an email
-option.
+| URL | File |
+|-----|------|
+| `/` | `index.html` (menu, pricing, app pages) |
+| `/blog` | `blog.html` |
+| `/support` | `support.html` |
+| `/refer` | `refer.html` |
+| `/terms`, `/privacy`, `/refunds` | `terms.html`, `privacy.html`, `refunds.html` |
 
-**Enable Google on your live site (2 min):**
-1. Google Cloud Console → *APIs & Services → Credentials → Create OAuth client ID*
-   → **Web application**.
-2. Under *Authorized JavaScript origins* add your domain (e.g.
-   `https://dashovia.app`) and `http://localhost:8000` for local testing.
-3. Copy the client ID and paste it into `index.html` at:
-   ```js
-   const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
-   ```
-   Google sign-in now works on your deployed site. (It's inert in the sandbox
-   preview because Google's script is blocked there — the UI still renders.)
+All pages share `assets/site.css` and `assets/common.js` (nav, footer, theme,
+sign-in, toasts). The support email lives at the top of `assets/common.js`.
 
-**What works now vs. what needs a backend:**
-- ✅ Real Google account chooser + verified ID token (client-side).
-- ✅ Signed-in state persists in the browser (`localStorage`).
-- ⏳ **Secure sessions and gating who paid** need a backend. Both
-  `handleCredential()` (Google) and the email form have a `TODO(backend)` marker
-  — POST the token/email to your server (or Supabase/Firebase/Clerk) to verify,
-  create a session, and check the Polar subscription before unlocking premium.
+## Sign in (Google + GitHub)
+
+One-click sign-in; the first sign-in creates the account. The server verifies
+the Google token / GitHub code and stores the user in a signed, HttpOnly cookie
+(`dc_session`), so there is no user database. Signed-in users get "Manage
+subscription" (Dodo customer portal) and their own referral link.
+
+- **Google:** Google Cloud Console → Credentials → OAuth client ID (Web
+  application). Add `https://getapps.dashovia.cafe` to *Authorized JavaScript
+  origins*. Set `GOOGLE_CLIENT_ID`.
+- **GitHub:** GitHub → Settings → Developer settings → OAuth Apps → New. Homepage
+  and callback URL: `https://getapps.dashovia.cafe/`. Set `GITHUB_CLIENT_ID` and
+  `GITHUB_CLIENT_SECRET`.
+- Set `SESSION_SECRET` (the Render blueprint generates one).
+
+## Refer & Earn
+
+Each user's code is derived from their email. A friend opening `/?ref=CODE`
+gets `REFERRAL_DISCOUNT_CODE` (20% off the first payment) at checkout, and the
+code is saved on the order as `metadata.referrer` (visible in the Dodo
+dashboard). To check a claim, compute the claimant's code:
+
+```bash
+node -e "console.log(require('crypto').createHash('sha256').update('dashovia-ref:'+process.argv[1].toLowerCase()).digest('hex').slice(0,8))" friend@example.com
+```
 
 ## Notes
 
-- **Demo data:** the "Top pourers" leaderboard and prices are placeholders. Wire
-  real checkout when payments land (Polar).
+- **Payments:** Dodo Payments (see above).
 - **Theme:** follows the visitor's OS light/dark; the ☀︎/☾ button overrides it.
-- **Editing the menu:** each app is one `.item` block in `index.html`. Add a card,
-  bump the sidebar count, done.
+- **Editing the menu:** add an entry to `APPS` in `index.html`. Cards, filters,
+  search and the detail page are generated from it.

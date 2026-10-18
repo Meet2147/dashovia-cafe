@@ -3,880 +3,443 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashovia Café — apps, served fresh</title>
-  <meta name="description" content="One subscription. Every Dashovia app on the menu, every update, every device on your plan — poured fresh." />
-  <meta name="theme-color" content="#0d1220" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#eef3f9" media="(prefers-color-scheme: light)" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%96%3C/text%3E%3C/svg%3E" />
-  <meta property="og:title" content="Dashovia Café — apps, served fresh" />
+  <title>Dashovia Café · apps, served fresh</title>
+  <meta name="description" content="One subscription. Every Dashovia app on the menu: native macOS apps and free developer tools. 7-day free trial." />
+  <meta property="og:title" content="Dashovia Café · apps, served fresh" />
   <meta property="og:description" content="One subscription. Every Dashovia app on the menu." />
   <meta property="og:type" content="website" />
-  <style>
-    :root {
-      /* light theme — cool ice neutrals, azure-blue accent, emerald-green secondary */
-      --ground: #eef3f9; --panel: #ffffff; --panel-2: #e4ecf5; --line: #d3deea;
-      --text: #0f1b2d; --muted: #4d5f78; --faint: #7488a3;
-      --accent: #2f6fe0; --accent-ink: #ffffff; --accent-soft: #dbe8fb;
-      --chili: #12a06a; --cardamom: #12a06a;
-      --shadow: 0 1px 2px rgba(60,40,20,.08), 0 8px 24px rgba(60,40,20,.06);
-      --radius: 16px;
-      --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      color-scheme: light dark;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --ground: #0d1220; --panel: #141c2e; --panel-2: #1c2740; --line: #2a3a58;
-        --text: #e9f0fb; --muted: #9db0d0; --faint: #6b7e9f;
-        --accent: #4f8dff; --accent-ink: #06122a; --accent-soft: #4f8dff24;
-        --chili: #2fd39a; --cardamom: #2fd39a;
-        --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
-      }
-    }
-    :root[data-theme="dark"] {
-      --ground: #0d1220; --panel: #141c2e; --panel-2: #1c2740; --line: #2a3a58;
-      --text: #e9f0fb; --muted: #9db0d0; --faint: #6b7e9f; --accent: #4f8dff;
-      --accent-ink: #06122a; --accent-soft: #4f8dff24; --chili: #2fd39a; --cardamom: #2fd39a;
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px rgba(0,0,0,.35);
-    }
-    :root[data-theme="light"] {
-      --ground: #eef3f9; --panel: #ffffff; --panel-2: #e4ecf5; --line: #d3deea;
-      --text: #0f1b2d; --muted: #4d5f78; --faint: #7488a3; --accent: #2f6fe0;
-      --accent-ink: #ffffff; --accent-soft: #dbe8fb; --chili: #12a06a; --cardamom: #12a06a;
-      --shadow: 0 1px 2px rgba(60,40,20,.08), 0 8px 24px rgba(60,40,20,.06);
-    }
-
-    * { box-sizing: border-box; }
-    html, body { margin: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--ground); color: var(--text); font-family: var(--font-sans);
-      line-height: 1.5; -webkit-font-smoothing: antialiased;
-    }
-    a { color: inherit; text-decoration: none; }
-
-    .wrap { display: grid; grid-template-columns: 264px 1fr; min-height: 100vh; }
-
-    .side {
-      border-right: 1px solid var(--line); padding: 22px 18px;
-      display: flex; flex-direction: column; gap: 22px;
-      position: sticky; top: 0; height: 100vh; overflow-y: auto;
-      background: linear-gradient(180deg, var(--panel), var(--ground));
-    }
-    .brand { display: flex; flex-direction: column; gap: 2px; }
-    .brand .name { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
-    .brand .name .dot { color: var(--accent); }
-    .brand .sub { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); }
-
-    .search {
-      display: flex; align-items: center; gap: 8px; padding: 9px 12px; width: 100%;
-      background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
-      color: var(--text); font-size: 13px; font-family: inherit; outline: none;
-      -webkit-appearance: none; appearance: none;
-    }
-    .search::placeholder { color: var(--faint); }
-    .search:focus { border-color: var(--accent); }
-
-    .group-label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--faint); margin: 2px 6px; }
-    .nav { display: flex; flex-direction: column; gap: 2px; }
-    .nav a {
-      display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px;
-      font-size: 14px; color: var(--muted); transition: background .15s, color .15s; cursor: pointer;
-    }
-    .nav a .ico { width: 18px; text-align: center; opacity: .9; }
-    .nav a .count {
-      margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--faint);
-      background: var(--panel-2); border: 1px solid var(--line); border-radius: 20px;
-      padding: 1px 8px; font-variant-numeric: tabular-nums;
-    }
-    .nav a:hover { background: var(--accent-soft); color: var(--text); }
-    .nav a.active { background: var(--accent); color: var(--accent-ink); }
-    .nav a.active .count { background: transparent; border-color: transparent; color: var(--accent-ink); opacity: .8; }
-
-    .earners { margin-top: auto; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--panel-2); }
-    .earners h4 { margin: 0 0 8px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
-    .earner { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 3px 0; }
-    .earner .rk { width: 16px; height: 16px; border-radius: 5px; display: grid; place-items: center; font-size: 10px; font-weight: 700; background: var(--accent-soft); color: var(--accent); }
-    .earner .amt { margin-left: auto; font-family: var(--font-mono); color: var(--cardamom); font-variant-numeric: tabular-nums; }
-
-    .main { padding: 40px clamp(20px, 5vw, 64px) 64px; }
-    .topbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
-    .themebtn { border: 1px solid var(--line); background: var(--panel); color: var(--muted);
-      border-radius: 20px; padding: 6px 14px; font-size: 12px; cursor: pointer; }
-    .themebtn:hover { color: var(--text); }
-
-    .eyebrow { text-align: center; font-size: 11px; letter-spacing: .24em; text-transform: uppercase; color: var(--accent); }
-    h1.hero { text-align: center; font-size: clamp(30px, 5vw, 48px); font-weight: 800; letter-spacing: -.03em;
-      margin: 8px 0 6px; text-wrap: balance; }
-    h1.hero em { font-style: normal; color: var(--accent); }
-    .lede { text-align: center; color: var(--muted); max-width: 52ch; margin: 0 auto 26px; }
-
-    .toggle { display: flex; justify-content: center; margin-bottom: 30px; }
-    .seg { display: inline-flex; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px; gap: 4px; }
-    .seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px;
-      padding: 7px 16px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-    .seg button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
-    .seg .save { font-size: 10px; font-weight: 700; letter-spacing: .04em; background: var(--chili); color: #052018; padding: 1px 7px; border-radius: 999px; }
-
-    .cards { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 20px; max-width: 760px; margin: 0 auto; }
-    .card { position: relative; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 26px 24px; box-shadow: var(--shadow); }
-    .card.pop { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); }
-    .badge { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--accent-ink);
-      font-size: 10px; font-weight: 700; letter-spacing: .1em; padding: 4px 12px; border-radius: 999px; text-transform: uppercase; }
-    .cup { width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft); display: grid; place-items: center; font-size: 22px; margin-bottom: 14px; border: 1px solid var(--line); }
-    .card h3 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
-    .card .who { color: var(--muted); font-size: 13px; margin: 2px 0 16px; }
-    .price { display: flex; align-items: baseline; gap: 4px; }
-    .price .amt { font-size: 40px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-    .price .per { color: var(--muted); font-size: 14px; }
-    .billed { color: var(--faint); font-size: 12.5px; margin: 6px 0 2px; min-height: 18px; }
-    .devices { color: var(--muted); font-size: 13px; padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
-    .feat { list-style: none; padding: 0; margin: 0 0 20px; display: flex; flex-direction: column; gap: 9px; }
-    .feat li { display: flex; gap: 9px; font-size: 13.5px; color: var(--text); }
-    .feat li .ck { color: var(--cardamom); font-weight: 700; }
-    .order { display: block; width: 100%; text-align: center; padding: 12px; border-radius: 11px;
-      font-weight: 600; font-size: 14px; cursor: pointer; border: 1px solid var(--line); background: var(--panel-2); color: var(--text); }
-    .order.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-    .order:hover { filter: brightness(1.04); }
-
-    .menu { max-width: 980px; margin: 56px auto 0; }
-    .menu-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
-    .menu-head h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
-    .menu-head p { margin: 0; color: var(--muted); font-size: 13px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .item { border: 1px solid var(--line); border-radius: 13px; background: var(--panel); padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: transform .15s, border-color .15s; }
-    .item:hover { transform: translateY(-2px); border-color: var(--accent); }
-    .item .top { display: flex; align-items: center; gap: 10px; }
-    .item .em { font-size: 20px; }
-    .item .nm { font-weight: 700; font-size: 15px; }
-    .item .type { margin-left: auto; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--line); padding: 2px 8px; border-radius: 999px; }
-    .item .desc { color: var(--muted); font-size: 13px; }
-    .item .meta { display: flex; align-items: center; gap: 10px; margin-top: 2px; font-size: 11.5px; color: var(--faint); }
-    .item .pill { font-family: var(--font-mono); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
-    .item .free { color: var(--cardamom); font-weight: 600; }
-
-    /* category browse (getapps.cafe-style sections) */
-    .menu-intro { max-width: 980px; margin: 56px auto 0; }
-    .menu-intro h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
-    .menu-intro p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-    .cat { max-width: 980px; margin: 40px auto 0; scroll-margin-top: 24px; }
-    .cat-head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px;
-      border-bottom: 1px solid var(--line); margin-bottom: 16px; }
-    .cat-ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
-      font-size: 18px; background: var(--accent-soft); border: 1px solid var(--line); flex: 0 0 auto; }
-    .cat-head h2 { margin: 0; font-size: 19px; letter-spacing: -.01em; }
-    .cat-tag { color: var(--muted); font-size: 13px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-    .app { display: flex; gap: 12px; border: 1px solid var(--line); border-radius: 13px;
-      background: var(--panel); padding: 14px; transition: transform .15s, border-color .15s; }
-    .app:hover { transform: translateY(-2px); border-color: var(--accent); }
-    .app-ico { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center;
-      font-size: 21px; background: var(--accent-soft); border: 1px solid var(--line); flex: 0 0 auto; }
-    .app-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-    .app-nm { font-weight: 700; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
-    .app-desc { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
-    .app-meta { margin-top: 2px; font-size: 11px; color: var(--faint); font-family: var(--font-mono); }
-    .app-meta .free { color: var(--cardamom); font-weight: 600; }
-    .badge2 { font-size: 9px; letter-spacing: .07em; font-weight: 700; padding: 2px 6px; border-radius: 5px;
-      background: var(--chili); color: #052018; text-transform: uppercase; }
-    .badge2.live { background: var(--accent); color: var(--accent-ink); }
-    .badge2.pro { background: var(--accent); color: var(--accent-ink); }
-    .badge2.soon { background: transparent; color: var(--muted); border: 1px solid var(--line); }
-    .app { position: relative; cursor: pointer; }
-    .app:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .app .corner { position: absolute; top: 11px; right: 11px; }
-    .app-body { padding-right: 6px; }
-
-    /* app detail view (CalX-style) */
-    .back { display: inline-block; color: var(--muted); font-size: 13px; margin-bottom: 26px; cursor: pointer; }
-    .back:hover { color: var(--text); }
-    .detail-head { display: flex; gap: 22px; align-items: flex-start; max-width: 820px; }
-    .detail-ico { width: 78px; height: 78px; border-radius: 18px; background: var(--accent-soft);
-      border: 1px solid var(--line); display: grid; place-items: center; font-size: 40px; flex: 0 0 auto; }
-    .detail-eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
-    .detail-title { font-size: clamp(28px, 4vw, 36px); font-weight: 800; letter-spacing: -.02em; margin: 0 0 10px; }
-    .detail-desc { color: var(--muted); font-size: 15px; max-width: 60ch; margin: 0 0 10px; line-height: 1.55; }
-    .detail-meta { font-size: 12px; color: var(--faint); font-family: var(--font-mono); }
-    .detail-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 28px 0 0; }
-    .btn-primary, .btn-secondary { display: inline-flex; align-items: center; gap: 8px; font: inherit;
-      font-weight: 700; font-size: 14px; padding: 12px 18px; border-radius: 11px; cursor: pointer; }
-    .btn-primary { background: var(--accent); color: var(--accent-ink); border: 0; }
-    .btn-primary:hover { filter: brightness(1.05); }
-    .btn-secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); font-weight: 600; }
-    .btn-secondary:hover { border-color: var(--accent); }
-    .btn-primary .vtag { background: rgba(255,255,255,.22); padding: 1px 7px; border-radius: 6px; font-size: 11px; font-weight: 700; }
-    .code-pill { font-family: var(--font-mono); font-size: 13px; background: var(--panel-2);
-      border: 1px solid var(--line); border-radius: 10px; padding: 11px 14px; color: var(--text);
-      display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
-    .code-pill .cp { color: var(--faint); font-size: 11px; }
-    .detail-divider { height: 1px; background: var(--line); max-width: 820px; margin: 26px 0 0; }
-    .detail-note { color: var(--faint); font-size: 13px; margin: 16px 0 0; max-width: 60ch; line-height: 1.55; }
-    .detail-note a { color: var(--accent); }
-    .detail-shots { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 26px; }
-    .shots-title { margin: 0 0 16px; font-size: 18px; }
-    .shots-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; }
-    .shot { flex: 0 0 auto; width: 440px; max-width: 82vw; height: 280px; border: 1px solid var(--line);
-      border-radius: 12px; background: var(--panel-2); overflow: hidden; display: flex; flex-direction: column; }
-    .shot-bar { height: 26px; display: flex; align-items: center; gap: 6px; padding: 0 10px;
-      background: var(--panel); border-bottom: 1px solid var(--line); }
-    .shot-bar i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-    .shot-body { flex: 1; padding: 16px; font-family: var(--font-mono); font-size: 11px; color: var(--muted);
-      white-space: pre-wrap; overflow: hidden; }
-
-    /* payment section (end of page) */
-    .pay { max-width: 980px; margin: 64px auto 0; padding-top: 40px;
-      border-top: 1px solid var(--line); scroll-margin-top: 24px; }
-    .pay .eyebrow { margin-bottom: 0; }
-    .pay .paytitle { text-align: center; font-size: clamp(26px, 4vw, 40px); font-weight: 800;
-      letter-spacing: -.03em; margin: 8px 0 6px; text-wrap: balance; }
-    .pay .paytitle em { font-style: normal; color: var(--accent); }
-
-    /* sign-in modal */
-    .overlay { position: fixed; inset: 0; background: rgba(6,10,20,.62); display: none;
-      align-items: center; justify-content: center; z-index: 60; padding: 20px; }
-    .overlay.open { display: flex; }
-    .modal { width: 100%; max-width: 420px; background: var(--panel); border: 1px solid var(--line);
-      border-radius: 16px; box-shadow: var(--shadow); padding: 24px; }
-    .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .modal-head h3 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
-    .modal-close { background: transparent; border: 0; color: var(--muted); font-size: 16px;
-      cursor: pointer; line-height: 1; padding: 4px; }
-    .modal-close:hover { color: var(--text); }
-    .gbtn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
-      padding: 11px; border: 1px solid var(--line); background: var(--panel-2); color: var(--text);
-      border-radius: 10px; font: inherit; font-weight: 600; font-size: 14px; cursor: pointer; }
-    .gbtn:hover { border-color: var(--accent); }
-    .gbtn svg { width: 18px; height: 18px; flex: 0 0 auto; }
-    .divider { display: flex; align-items: center; gap: 12px; color: var(--faint);
-      font-size: 11px; letter-spacing: .12em; margin: 16px 0; }
-    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-    .email-input { width: 100%; padding: 12px; border: 1px solid var(--line); background: var(--panel-2);
-      color: var(--text); border-radius: 10px; font: inherit; font-size: 14px; outline: none; }
-    .email-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .email-input::placeholder { color: var(--faint); }
-    .pbtn { width: 100%; margin-top: 10px; padding: 12px; border: 0; border-radius: 10px;
-      background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 700;
-      font-size: 14px; cursor: pointer; }
-    .pbtn:hover { filter: brightness(1.05); }
-    .modal-note { margin: 14px 0 0; font-size: 11px; color: var(--faint); text-align: center; line-height: 1.5; }
-
-    footer { max-width: 980px; margin: 48px auto 0; color: var(--faint); font-size: 12px; text-align: center; border-top: 1px solid var(--line); padding-top: 20px; }
-
-    @media (max-width: 860px) {
-      .wrap { grid-template-columns: 1fr; }
-      .side { position: static; height: auto; }
-      .nav { display: grid; grid-template-columns: repeat(2, 1fr); }
-      .earners { display: none; }
-      .cards { grid-template-columns: 1fr; max-width: 420px; }
-    }
-    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } html { scroll-behavior: auto; } }
-    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  </style>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%96%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script>
+    // Apply a saved theme before paint so there's no flash.
+    try { const t = localStorage.getItem('dashovia_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch {}
+  </script>
+  <link rel="stylesheet" href="/assets/site.css" />
 </head>
 <body>
-  <div class="wrap">
-    <aside class="side">
-      <div class="brand">
-        <div class="name">dashovia<span class="dot">.café</span></div>
-        <div class="sub">Apps · Freshly Brewed</div>
-      </div>
-      <input id="search" class="search" type="search" placeholder="🔍  Search apps…" aria-label="Search apps" />
+<div id="site-nav"></div>
 
+<div id="menuView">
+  <main class="land">
+    <section class="hero">
       <div>
-        <div class="group-label">Today's Menu</div>
-        <nav class="nav">
-          <a class="navcat active" href="#on-the-house"><span class="ico">☕</span> On the House <span class="count">8</span></a>
-          <a class="navcat" href="#kadak-chai"><span class="ico">🍵</span> Kadak Chai <span class="count">2</span></a>
-          <a class="navcat" href="#masala-chai"><span class="ico">🫖</span> Masala Chai <span class="count">3</span></a>
-          <a href="https://api.dashovia.app/" target="_blank" rel="noopener"><span class="ico">🧋</span> APIs <span class="count">↗</span></a>
-        </nav>
+        <span class="chip lime">✨ 7 days free · no card needed</span>
+        <h1>Apps, <span class="hl">served</span> <span class="u">fresh</span>.</h1>
+        <p class="lead">One subscription, every premium Dashovia app: native, private, on-device Mac apps,
+          plus the dev libraries we use ourselves. The free ones are always on the house.</p>
+        <div class="row wrap" style="margin-top:22px">
+          <a class="btn primary lg" href="#menu">Browse the menu ☕</a>
+          <a class="btn lg" href="#pricing">Pick your cup</a>
+        </div>
+        <div class="row wrap small muted" style="margin-top:18px;gap:16px">
+          <span>🍎 Native macOS</span><span>🔒 100% on-device</span><span>🐍 Free Python tools</span>
+        </div>
       </div>
+      <div style="position:relative;padding:20px 10px">
+        <div class="mock">
+          <div class="dots"><i></i><i></i><i></i></div>
+<div class="code"><span class="c"># today's order</span>
+<span class="k">$</span> dashovia <span class="f">order</span> --cup <span class="s">"full-kettle"</span>
 
-      <div>
-        <div class="group-label">Counter</div>
-        <nav class="nav">
-          <a href="#pricing"><span class="ico">🏷️</span> Pricing</a>
-          <a><span class="ico">📓</span> Blog</a>
-          <a><span class="ico">💬</span> Support</a>
-          <a id="signinLink"><span class="ico">👤</span> <span id="signinLabel">Sign in</span></a>
-          <a><span class="ico">🎁</span> Refer &amp; Earn</a>
-        </nav>
+<span class="c">brewing…</span>
+  <span class="s">✓</span> Kadak        <span class="c">URL → PDF + shots</span>
+  <span class="s">✓</span> Stepwise     <span class="c">clicks → guide</span>
+  <span class="s">✓</span> Cadence      <span class="c">5-step screen guides</span>
+  <span class="s">✓</span> Cubby        <span class="c">menu-bar stash</span>
+  <span class="s">✓</span> Cairn        <span class="c">posture coach</span>
+  <span class="s">✓</span> + ResumeBaker & 8 free tools
+
+<span class="c">▶ served hot. enjoy ☕</span></div>
+          <div class="floaty left" style="left:-18px;bottom:-18px;background:#d4ff3a;color:#16141f;transform:rotate(-6deg)">✅ All apps unlocked</div>
+          <div class="floaty right" style="right:-10px;top:-20px;background:#ff6b1a;color:#fff;transform:rotate(5deg)">🔥 fresh this week</div>
+        </div>
       </div>
+    </section>
+  </main>
 
-      <div class="earners">
-        <h4>Top pourers this month</h4>
-        <div class="earner"><span class="rk">1</span> me··@gmail.com <span class="amt">$2,012</span></div>
-        <div class="earner"><span class="rk">2</span> aa··@gmail.com <span class="amt">$1,670</span></div>
-        <div class="earner"><span class="rk">3</span> kb··@gmail.com <span class="amt">$1,544</span></div>
+  <div class="marquee" aria-hidden="true"><div id="marq"></div></div>
+
+  <main class="land">
+    <section class="section" id="menu">
+      <h2>Today's menu. <span class="muted">Pick anything.</span></h2>
+      <p class="muted" style="max-width:640px;margin:0">Native macOS apps and free developer tools, all brewed in-house.
+        Tap any card for details, downloads and links.</p>
+      <div class="toolbar">
+        <input id="search" class="search" type="search" placeholder="🔍  Search apps…" aria-label="Search apps" />
+        <div class="filters" id="filters" role="tablist" aria-label="Filter by category"></div>
       </div>
-    </aside>
-
-    <main class="main">
-      <div class="topbar">
-        <button class="themebtn" id="themeBtn">☀︎ / ☾ theme</button>
+      <div id="cats"></div>
+      <div class="empty-state" id="noResults" hidden>
+        <div style="font-size:34px">🫗</div>
+        <h3 style="margin:6px 0">Nothing on the menu by that name.</h3>
+        <p class="muted" style="margin:0">Try another search, or clear the filter.</p>
       </div>
+    </section>
 
-      <div id="menuView">
-      <div class="eyebrow">— The Menu —</div>
-      <h1 class="hero">Apps, <em>served fresh.</em></h1>
-      <p class="lede">One subscription, every premium app included — and the free ones are always on the house.</p>
+    <section class="section" id="why">
+      <h2>Why sip at the café <span class="muted">(instead of 12 subscriptions)</span></h2>
+      <div class="feature-grid">
+        <div class="card feature"><div class="ic">🫖</div><h3>One bill, every app</h3><p>A single subscription unlocks every premium app now and everything we ship later.</p></div>
+        <div class="card feature"><div class="ic">🍎</div><h3>Native, not wrappers</h3><p>Our macOS apps are real native apps: fast, light, and they work offline.</p></div>
+        <div class="card feature"><div class="ic">🎁</div><h3>Free tools, forever</h3><p>The developer libraries stay free and open. No account needed to use them.</p></div>
+        <div class="card feature"><div class="ic">🔄</div><h3>Updates included</h3><p>Every new version lands automatically. No upgrade fees, no "v2 is a new purchase".</p></div>
+        <div class="card feature"><div class="ic">👨‍👩‍👧</div><h3>Share the pot</h3><p>Full Kettle covers up to 5 devices, so the whole family or team gets a cup.</p></div>
+        <div class="card feature" style="background:var(--lime);color:var(--lime-ink);border-color:var(--line-strong)"><div class="ic" style="background:#fff">🧾</div><h3 style="color:inherit">Cancel anytime</h3><p style="color:inherit">Cancel in one click from your receipt email. No calls, no guilt trips.</p></div>
+      </div>
+    </section>
 
-      <section class="cat" id="on-the-house">
-        <div class="cat-head"><div class="cat-ico">☕</div><h2>On the House</h2><span class="cat-tag">· free tools</span></div>
-        <div class="grid">
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🖤</div>
-            <div class="app-body"><div class="app-nm">htmlpdf</div>
-              <div class="app-desc">HTML → PDF with zero dependencies. Nothing to install.</div>
-              <div class="app-meta">Python library</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🕸️</div>
-            <div class="app-body"><div class="app-nm">sitepdf</div>
-              <div class="app-desc">Crawl a whole site — images, JS, real layout — into one bookmarked PDF.</div>
-              <div class="app-meta">CLI · Python</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🛡️</div>
-            <div class="app-body"><div class="app-nm">redactor</div>
-              <div class="app-desc">Mask PII &amp; secrets before text hits an LLM, then restore the reply.</div>
-              <div class="app-meta">Python library</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🌿</div>
-            <div class="app-body"><div class="app-nm">chunkwise</div>
-              <div class="app-desc">Token-aware, boundary-respecting text chunking with overlap and metadata.</div>
-              <div class="app-meta">Python library</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🧩</div>
-            <div class="app-body"><div class="app-nm">promptkit</div>
-              <div class="app-desc">Prompt templates with validation, few-shot rendering and a versioned registry.</div>
-              <div class="app-meta">Python library</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🔎</div>
-            <div class="app-body"><div class="app-nm">vectorlite</div>
-              <div class="app-desc">Tiny in-memory vector store: cosine, top-k, MMR re-ranking. No numpy.</div>
-              <div class="app-meta">Python library</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🧬</div>
-            <div class="app-body"><div class="app-nm">llmparse</div>
-              <div class="app-desc">Extract &amp; repair JSON from messy LLM output, then coerce it to a schema.</div>
-              <div class="app-meta">Python library</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">Free</span>
-            <div class="app-ico">🚀</div>
-            <div class="app-body"><div class="app-nm">publishkey</div>
-              <div class="app-desc">Press one key, ship your web app — detect the framework and deploy.</div>
-              <div class="app-meta">CLI tool</div></div>
-          </div>
-        </div>
-      </section>
+    <section class="section" id="pricing">
+      <h2>Two cups. <span class="muted">No surprises.</span></h2>
+      <p class="muted" style="max-width:640px;margin:0">Every premium app included, on every device on your plan. Start with a
+        <b>7-day free trial</b>. Prefer to own one app? Kadak is also sold on its own.</p>
 
-      <section class="cat" id="kadak-chai">
-        <div class="cat-head"><div class="cat-ico">🍵</div><h2>Kadak Chai</h2><span class="cat-tag">· native macOS apps</span></div>
-        <div class="grid">
-          <div class="app"><span class="badge2 pro corner">Pro</span>
-            <div class="app-ico">💪</div>
-            <div class="app-body"><div class="app-nm">Kadak</div>
-              <div class="app-desc">Brew any website into a full-page PDF, plus up to 10 screenshots.</div>
-              <div class="app-meta">macOS app · URL → PDF + shots</div></div>
-          </div>
-          <div class="app"><span class="badge2 corner">macOS</span>
-            <div class="app-ico">📄</div>
-            <div class="app-body"><div class="app-nm">ResumeBaker</div>
-              <div class="app-desc">Bake a polished résumé in minutes — pick a template, fill the blanks, export to PDF.</div>
-              <div class="app-meta">macOS app · v1.0.3</div></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="cat" id="masala-chai">
-        <div class="cat-head"><div class="cat-ico">🫖</div><h2>Masala Chai</h2><span class="cat-tag">· live web apps</span></div>
-        <div class="grid">
-          <div class="app"><span class="badge2 live corner">Live</span>
-            <div class="app-ico">📦</div>
-            <div class="app-body"><div class="app-nm">Cubby</div>
-              <div class="app-desc">Your little corner of the web — stash links, files and notes in one tidy cubby.</div>
-              <div class="app-meta">Web app</div></div>
-          </div>
-          <div class="app"><span class="badge2 live corner">Live</span>
-            <div class="app-ico">🥁</div>
-            <div class="app-body"><div class="app-nm">Cadence</div>
-              <div class="app-desc">Keep your team in rhythm — async standups and one calm daily digest.</div>
-              <div class="app-meta">Web app</div></div>
-          </div>
-          <div class="app"><span class="badge2 live corner">Live</span>
-            <div class="app-ico">🗿</div>
-            <div class="app-body"><div class="app-nm">Cairn</div>
-              <div class="app-desc">Mark the path — lightweight milestones and progress markers for any project.</div>
-              <div class="app-meta">Web app</div></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="pay" id="pricing">
-        <div class="eyebrow">— Pick your cup —</div>
-        <h2 class="paytitle">Two cups. <em>No surprises.</em></h2>
-        <p class="lede">Every premium app included, on every device on your plan. Cancel anytime.</p>
-
-        <div class="toggle">
-          <div class="seg" role="tablist" aria-label="Billing period">
-            <button id="annual" class="on" aria-selected="true">Annual <span class="save">−50%</span></button>
-            <button id="monthly" aria-selected="false">Monthly</button>
-          </div>
-        </div>
-
-        <section class="cards">
-          <div class="card">
-            <div class="cup">🍵</div>
-            <h3>Cutting Chai</h3>
-            <div class="who">just for you</div>
-            <div class="price"><span class="amt" data-m="3.99" data-a="1.99">$1.99</span><span class="per">/month</span></div>
-            <div class="billed" data-m="billed monthly" data-a="billed $23.88 a year">billed $23.88 a year</div>
-            <div class="devices">1 device · all apps included</div>
-            <ul class="feat">
-              <li><span class="ck">✓</span> All premium apps</li>
-              <li><span class="ck">✓</span> All future updates</li>
-              <li><span class="ck">✓</span> 7-day free trial</li>
-              <li><span class="ck">✓</span> Cancel anytime</li>
-            </ul>
-            <button class="order">Order cutting →</button>
-          </div>
-
-          <div class="card pop">
-            <div class="badge">Most Popular</div>
-            <div class="cup">🫖</div>
-            <h3>Full Kettle</h3>
-            <div class="who">share the pot</div>
-            <div class="price"><span class="amt" data-m="7.99" data-a="3.99">$3.99</span><span class="per">/month</span></div>
-            <div class="billed" data-m="billed monthly" data-a="billed $47.88 a year">billed $47.88 a year</div>
-            <div class="devices">up to 5 devices · all apps included</div>
-            <ul class="feat">
-              <li><span class="ck">✓</span> Everything in Cutting Chai</li>
-              <li><span class="ck">✓</span> Share with 4 family members</li>
-              <li><span class="ck">✓</span> Priority support</li>
-              <li><span class="ck">✓</span> Early sips of new apps</li>
-            </ul>
-            <button class="order primary">Order the kettle →</button>
-          </div>
-        </section>
-      </section>
-      </div><!-- /menuView -->
-
-      <div id="detailView" hidden>
-        <a class="back" id="detailBack" role="button" tabindex="0">← Back</a>
-        <div class="detail-head">
-          <div class="detail-ico" id="dIco">☕</div>
-          <div>
-            <div class="detail-eyebrow" id="dCat"></div>
-            <h1 class="detail-title" id="dName"></h1>
-            <p class="detail-desc" id="dDesc"></p>
-            <div class="detail-meta" id="dMeta"></div>
-          </div>
-        </div>
-        <div class="detail-actions" id="dActions"></div>
-        <p class="detail-note" id="dNote"></p>
-        <div class="detail-shots" id="dShots" hidden>
-          <h3 class="shots-title">Screenshots</h3>
-          <div class="shots-row" id="dShotsRow"></div>
+      <div class="toggle">
+        <div class="seg" role="tablist" aria-label="Billing period">
+          <button id="annual" class="on" role="tab" aria-selected="true">Annual <span class="save">−50%</span></button>
+          <button id="monthly" role="tab" aria-selected="false">Monthly</button>
         </div>
       </div>
 
-      <footer>
-        dashovia.café — apps, served fresh · a demo storefront · 7-day free trial, no card required
-      </footer>
-    </main>
-  </div>
+      <div class="plans">
+        <div class="plan">
+          <div class="cup">🍵</div>
+          <h3>Cutting Chai</h3>
+          <div class="who">just for you</div>
+          <div class="price"><span data-m="3.99" data-a="1.99">$1.99</span><small> /month</small></div>
+          <div class="billed" data-m="billed monthly" data-a="billed $23.88 a year">billed $23.88 a year</div>
+          <ul>
+            <li>All premium apps</li>
+            <li>All future updates</li>
+            <li>1 device</li>
+            <li>7-day free trial</li>
+          </ul>
+          <button class="btn block" data-plan="cutting">Order a cutting →</button>
+        </div>
 
-  <div class="overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-    <div class="modal">
-      <div class="modal-head">
-        <h3 id="authTitle">Sign in</h3>
-        <button class="modal-close" id="authClose" aria-label="Close">✕</button>
+        <div class="plan hot">
+          <span class="chip lime tag">🔥 Most popular</span>
+          <div class="cup">🫖</div>
+          <h3>Full Kettle</h3>
+          <div class="who">share the pot</div>
+          <div class="price"><span data-m="7.99" data-a="3.99">$3.99</span><small> /month</small></div>
+          <div class="billed" data-m="billed monthly" data-a="billed $47.88 a year">billed $47.88 a year</div>
+          <ul>
+            <li>Everything in Cutting Chai</li>
+            <li>Up to 5 devices</li>
+            <li>Priority support</li>
+            <li>Early sips of new apps</li>
+          </ul>
+          <button class="btn primary block" data-plan="kettle">Order the kettle →</button>
+        </div>
+
+        <div class="plan">
+          <div class="cup">💪</div>
+          <h3>Kadak, to go</h3>
+          <div class="who">just the one app</div>
+          <div class="price">$4.99<small> once</small></div>
+          <div class="billed">one-time payment, yours to keep</div>
+          <ul>
+            <li>Kadak for macOS</li>
+            <li>URL → full-page PDF</li>
+            <li>Up to 10 screenshots per page</li>
+            <li>1 device, no subscription</li>
+          </ul>
+          <button class="btn block" data-plan="kadak">Buy Kadak →</button>
+        </div>
       </div>
-      <button class="gbtn" id="googleBtn">
-        <svg viewBox="0 0 48 48" aria-hidden="true">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-        </svg>
-        Continue with Google
-      </button>
-      <button class="gbtn" id="githubBtn">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.28-.01-1.02-.02-2-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.4-5.25 5.68.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .31.21.68.8.56A11.51 11.51 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>
-        Continue with GitHub
-      </button>
-      <div class="divider">OR</div>
-      <form id="emailForm">
-        <input class="email-input" id="emailInput" type="email" placeholder="you@email.com"
-               required autocomplete="email" />
-        <button class="pbtn" type="submit">Continue with email</button>
-      </form>
-      <p class="modal-note" id="authNote"></p>
+      <p class="pay-note small muted">🔒 Secure checkout by Dodo Payments · cards, UPI, Apple Pay and Google Pay · taxes handled for you</p>
+    </section>
+
+    <section class="section faq" style="max-width:780px">
+      <h2>FAQ</h2>
+      <details><summary>What's included in a subscription?</summary><p>Every premium app on the menu, every future update, and every new app we add while you're subscribed.</p></details>
+      <details><summary>Are the free tools really free?</summary><p>Yes. Everything marked "Free" stays free, with no account needed.</p></details>
+      <details><summary>How does the free trial work?</summary><p>You get 7 days of everything. Cancel before the trial ends and you won't be charged.</p></details>
+      <details><summary>How do I cancel?</summary><p>Use the "manage subscription" link in your receipt email, or contact support. You keep access until the end of the period you paid for.</p></details>
+      <details><summary>Which payment methods do you accept?</summary><p>Checkout is run by Dodo Payments: major cards, UPI, Apple Pay and Google Pay, with local taxes handled automatically.</p></details>
+    </section>
+
+    <section class="section">
+      <div class="hero-card">
+        <div class="blob"></div><div class="blob b2"></div>
+        <h2>Your cup is ready. ☕</h2>
+        <p class="muted" style="margin:0 0 20px">Seven days free. Every app on the menu. Let's brew.</p>
+        <a class="btn lime lg" href="#pricing">Start free trial</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<main class="land detail" id="detailView" hidden>
+  <button class="btn sm" id="detailBack">← Back to the menu</button>
+  <div class="detail-head">
+    <div class="detail-ico" id="dIco">☕</div>
+    <div>
+      <span class="chip violet" id="dCat"></span>
+      <h1 id="dName"></h1>
+      <p class="detail-desc" id="dDesc"></p>
+      <div class="detail-meta" id="dMeta"></div>
     </div>
   </div>
+  <div class="detail-actions" id="dActions"></div>
+  <p class="detail-note" id="dNote"></p>
+  <div id="dShots" hidden style="margin-top:40px">
+    <h2 style="margin:0">Screenshots</h2>
+    <div class="shots-row" id="dShotsRow"></div>
+  </div>
+</main>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script>
-    const annual = document.getElementById('annual');
-    const monthly = document.getElementById('monthly');
-    function setPeriod(mode) {
-      const isA = mode === 'a';
-      annual.classList.toggle('on', isA);
-      monthly.classList.toggle('on', !isA);
-      annual.setAttribute('aria-selected', isA);
-      monthly.setAttribute('aria-selected', !isA);
-      document.querySelectorAll('.amt[data-m]').forEach(el => {
-        el.textContent = '$' + el.getAttribute(isA ? 'data-a' : 'data-m');
+<div id="site-foot"></div>
+
+<script src="/assets/common.js"></script>
+<script>
+  // =====================================================================
+  //  EDIT HERE — the menu (categories and apps). Cards, filters, search and
+  //  detail pages are generated from these lists.
+  // =====================================================================
+  const CATS = [
+    { id: 'kadak-chai',   icon: '🍵', name: 'Kadak Chai',   tag: 'native macOS apps' },
+    { id: 'on-the-house', icon: '☕', name: 'On the House', tag: 'free developer tools' },
+  ];
+
+  // kind: macos | web | python | cli
+  // badge: Pro | Free | Live | macOS | Soon
+  // url: app website · dmg: direct download link
+  const APPS = [
+    { key: 'kadak', name: 'Kadak', icon: '💪', cat: 'kadak-chai', kind: 'macos', badge: 'Pro', version: '1.0.0', buy: 'kadak',
+      short: 'Brew any website into a full-page PDF, plus up to 10 screenshots.',
+      desc: 'Brew any website into a full-page PDF, plus up to 10 screenshots. A native macOS app with a clean, one-screen flow.',
+      meta: 'macOS app · URL → PDF + shots', shots: true },
+    { key: 'resumebaker', name: 'ResumeBaker', icon: '📄', cat: 'kadak-chai', kind: 'macos', badge: 'macOS', version: '1.0.3',
+      short: 'Bake a polished résumé in minutes: pick a template, fill the blanks, export to PDF.',
+      desc: 'Bake a polished résumé in minutes. Pick a template, fill in the blanks and export a clean, recruiter-ready PDF. A native macOS app.',
+      meta: 'macOS app · v1.0.3', dmg: 'downloads/ResumeBaker_1.0.3.dmg' },
+
+    { key: 'stepwise', name: 'Stepwise', icon: '🪜', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
+      short: 'Record once, get a step-by-step guide with captions, screenshots and a PDF.',
+      desc: 'Stepwise turns the clicks you make into a captioned, screenshotted guide, keeps the screen recording, and exports a PDF. A private, on-device Mac app.',
+      meta: 'macOS app · clicks → guide + PDF', url: 'https://stepwise.dashovia.app' },
+    { key: 'cadence', name: 'Cadence', icon: '🎬', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
+      short: 'Screen guides in 5 steps, 1 minute each, stitched into one MP4.',
+      desc: 'Cadence records structured screen guides: 5 steps, a hard 1-minute cap per step, stitched into one MP4. No editing. No cloud.',
+      meta: 'macOS app · screen guides → MP4', url: 'https://cadence.dashovia.app' },
+    { key: 'cubby', name: 'Cubby', icon: '📦', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
+      short: 'Your stuff, in its place. A menu-bar panel of values, one keystroke away.',
+      desc: 'Cubby is a native macOS menu-bar app. Press a hotkey, get an elegant panel of your named compartments (phone, API keys, bank details) and copy any value instantly. 100% on-device.',
+      meta: 'macOS menu-bar app', url: 'https://cubby.dashovia.app' },
+    { key: 'cairn', name: 'Cairn', icon: '🗿', cat: 'kadak-chai', kind: 'macos', badge: 'macOS',
+      short: 'Desk wellness: on-device posture, eye and stretch-break coaching.',
+      desc: 'Cairn watches your webcam on-device with MediaPipe AI and coaches your posture, eyes, and stretch breaks. Private, offline, macOS.',
+      meta: 'macOS app · desk wellness', url: 'https://cairn.dashovia.app' },
+
+    { key: 'htmlpdf', name: 'htmlpdf', icon: '🖤', cat: 'on-the-house', kind: 'python', badge: 'Free',
+      short: 'HTML → PDF with zero dependencies. Nothing to install.',
+      desc: 'Convert HTML to a paginated PDF using only the Python standard library: no browser, no C libraries, no dependencies. Headings, lists, quotes, code, links and automatic pagination.',
+      meta: 'Python library' },
+    { key: 'sitepdf', name: 'sitepdf', icon: '🕸️', cat: 'on-the-house', kind: 'cli', badge: 'Free',
+      short: 'Crawl a whole site (images, JS, real layout) into one bookmarked PDF.',
+      desc: 'Crawl a whole website and save it, images, JavaScript and real layout included, as one bookmarked PDF using headless Chromium.',
+      meta: 'CLI · Python' },
+    { key: 'redactor', name: 'redactor', icon: '🛡️', cat: 'on-the-house', kind: 'python', badge: 'Free',
+      short: 'Mask PII & secrets before text hits an LLM, then restore the reply.',
+      desc: 'Detect and reversibly mask PII and secrets in text before it reaches an LLM, then restore the model’s reply.',
+      meta: 'Python library' },
+    { key: 'chunkwise', name: 'chunkwise', icon: '🌿', cat: 'on-the-house', kind: 'python', badge: 'Free',
+      short: 'Token-aware, boundary-respecting text chunking with overlap and metadata.',
+      desc: 'Token-aware, boundary-respecting text chunking (recursive, sentence, markdown) with overlap, metadata and a pluggable token counter.',
+      meta: 'Python library' },
+    { key: 'promptkit', name: 'promptkit', icon: '🧩', cat: 'on-the-house', kind: 'python', badge: 'Free',
+      short: 'Prompt templates with validation, few-shot rendering and a versioned registry.',
+      desc: 'A prompt template engine: required-variable validation, few-shot rendering, a chat/message builder and a versioned registry.',
+      meta: 'Python library' },
+    { key: 'vectorlite', name: 'vectorlite', icon: '🔎', cat: 'on-the-house', kind: 'python', badge: 'Free',
+      short: 'Tiny in-memory vector store: cosine, top-k, MMR re-ranking. No numpy.',
+      desc: 'A tiny in-memory vector store: cosine / dot / euclidean, top-k, metadata filtering, MMR re-ranking and JSON persistence. No numpy.',
+      meta: 'Python library' },
+    { key: 'llmparse', name: 'llmparse', icon: '🧬', cat: 'on-the-house', kind: 'python', badge: 'Free',
+      short: 'Extract & repair JSON from messy LLM output, then coerce it to a schema.',
+      desc: 'Robustly extract and repair JSON from messy LLM text (code fences, prose, trailing commas, single quotes) and coerce it to a schema.',
+      meta: 'Python library' },
+    { key: 'publishkey', name: 'publishkey', icon: '🚀', cat: 'on-the-house', kind: 'cli', badge: 'Free',
+      short: 'Press one key, ship your web app. Detects the framework and deploys.',
+      desc: 'Press one key, ship your web app. Detects FastAPI / Flask / Streamlit / Django and deploys it to the cloud.',
+      meta: 'CLI tool' },
+  ];
+  // =====================================================================
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const BADGE_CLASS = { Pro: 'violet', Free: 'ok', Live: 'lime', macOS: '', Soon: '' };
+
+  const toast = Cafe.toast;
+
+  // ---------- marquee
+  const words = ['☕ apps, served fresh', 'Kadak', '🍎 native macOS', 'ResumeBaker', 'Stepwise', '🫖 one subscription',
+    'Cadence', 'Cubby', 'Cairn', '🔒 on-device', 'htmlpdf', '🐍 free tools', 'sitepdf', 'redactor', 'chunkwise', '🔥 updates included', 'promptkit', 'vectorlite', 'llmparse', 'publishkey'];
+  const run = words.map((w, i) => `<span class="${i % 2 ? 'alt' : ''}">${esc(w)}</span>`).join('');
+  $('marq').innerHTML = run + run;
+
+  // ---------- menu
+  let activeCat = 'all';
+  function appCard(a) {
+    return `<button class="card feature app" data-key="${esc(a.key)}">
+      <div class="top"><div class="ic">${esc(a.icon)}</div><span class="chip ${BADGE_CLASS[a.badge] || ''}">${esc(a.badge)}</span></div>
+      <h4>${esc(a.name)}</h4><p>${esc(a.short)}</p><div class="meta">${esc(a.meta)}</div></button>`;
+  }
+  function renderFilters() {
+    const all = [{ id: 'all', icon: '✨', name: 'Everything' }, ...CATS];
+    $('filters').innerHTML = all.map((c) =>
+      `<button class="chip filter ${c.id === activeCat ? 'on' : ''}" role="tab" aria-selected="${c.id === activeCat}" data-cat="${c.id}">${esc(c.icon)} ${esc(c.name)}</button>`).join('');
+  }
+  function renderMenu() {
+    const q = $('search').value.trim().toLowerCase();
+    let shown = 0;
+    $('cats').innerHTML = CATS.filter((c) => activeCat === 'all' || c.id === activeCat).map((c) => {
+      const apps = APPS.filter((a) => a.cat === c.id &&
+        (!q || [a.name, a.short, a.meta, a.badge].join(' ').toLowerCase().includes(q)));
+      shown += apps.length;
+      if (!apps.length) return '';
+      return `<div class="cat" id="${c.id}">
+        <div class="cat-head"><div class="cat-ico">${esc(c.icon)}</div><h3>${esc(c.name)}</h3><span class="muted">· ${esc(c.tag)}</span></div>
+        <div class="feature-grid">${apps.map(appCard).join('')}</div></div>`;
+    }).join('');
+    $('noResults').hidden = shown > 0;
+  }
+  $('filters').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cat]'); if (!b) return;
+    activeCat = b.dataset.cat; renderFilters(); renderMenu();
+  });
+  $('search').addEventListener('input', renderMenu);
+  $('cats').addEventListener('click', (e) => {
+    const card = e.target.closest('[data-key]'); if (card) showDetail(card.dataset.key);
+  });
+  renderFilters(); renderMenu();
+
+  // ---------- pricing toggle
+  let period = 'annual';
+  function setPeriod(p) {
+    period = p;
+    const isA = p === 'annual';
+    $('annual').classList.toggle('on', isA); $('monthly').classList.toggle('on', !isA);
+    $('annual').setAttribute('aria-selected', isA); $('monthly').setAttribute('aria-selected', !isA);
+    document.querySelectorAll('.price [data-m]').forEach((el) => { el.textContent = '$' + el.dataset[isA ? 'a' : 'm']; });
+    document.querySelectorAll('.billed[data-m]').forEach((el) => { el.textContent = el.dataset[isA ? 'a' : 'm']; });
+  }
+  $('annual').addEventListener('click', () => setPeriod('annual'));
+  $('monthly').addEventListener('click', () => setPeriod('monthly'));
+
+  // ---------- checkout (Dodo Payments via our server)
+  async function checkout(plan, btn) {
+    const label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Brewing checkout…'; }
+    try {
+      // The server takes the buyer's email from their session, if signed in.
+      const r = await fetch('/api/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, period, ref: Cafe.getRef() }),
       });
-      document.querySelectorAll('.billed[data-m]').forEach(el => {
-        el.textContent = el.getAttribute(isA ? 'data-a' : 'data-m');
-      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || !data.checkout_url) throw new Error(data.error || 'Checkout is not available right now.');
+      location.href = data.checkout_url;
+    } catch (e) {
+      toast(e.message || 'Checkout failed.', 'bad');
+      if (btn) { btn.disabled = false; btn.textContent = label; }
     }
-    annual.addEventListener('click', () => setPeriod('a'));
-    monthly.addEventListener('click', () => setPeriod('m'));
+  }
+  document.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => checkout(b.dataset.plan, b)));
 
-    // Category scroll-spy: highlight the sidebar chai you're currently viewing,
-    // and update the URL hash — like getapps.cafe's #americano navigation.
-    const catLinks = new Map(
-      [...document.querySelectorAll('a.navcat')].map(a => [a.getAttribute('href').slice(1), a])
-    );
-    function setActive(id) {
-      document.querySelectorAll('a.navcat').forEach(a => a.classList.remove('active'));
-      const link = catLinks.get(id);
-      if (link) link.classList.add('active');
-    }
-    const spy = new IntersectionObserver((entries) => {
-      const visible = entries.filter(e => e.isIntersecting)
-        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) {
-        setActive(visible.target.id);
-        history.replaceState(null, '', '#' + visible.target.id);
-      }
-    }, { rootMargin: '-25% 0px -65% 0px', threshold: [0, 0.25, 0.5] });
-    document.querySelectorAll('section.cat').forEach(s => spy.observe(s));
-    document.querySelectorAll('a.navcat').forEach(a =>
-      a.addEventListener('click', () => setActive(a.getAttribute('href').slice(1))));
+  // Dodo sends buyers back with ?status=… after checkout.
+  (function handleCheckoutReturn() {
+    const url = new URL(location.href);
+    if (url.searchParams.get('checkout') !== 'done') return;
+    const status = (url.searchParams.get('status') || '').toLowerCase();
+    if (['succeeded', 'active', 'processing'].includes(status) || !status) toast('Order received. Check your email for your receipt ☕', 'ok');
+    else toast('Payment didn’t go through. No charge was made.', 'bad');
+    ['checkout', 'status', 'payment_id', 'subscription_id', 'email'].forEach((k) => url.searchParams.delete(k));
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  })();
 
-    // Live search: filter app cards, hide categories with no matches.
-    const search = document.getElementById('search');
-    if (search) {
-      search.addEventListener('input', () => {
-        const q = search.value.trim().toLowerCase();
-        document.querySelectorAll('section.cat').forEach(sec => {
-          let any = false;
-          sec.querySelectorAll('.app').forEach(app => {
-            const show = !q || app.textContent.toLowerCase().includes(q);
-            app.style.display = show ? '' : 'none';
-            if (show) any = true;
-          });
-          sec.style.display = any ? '' : 'none';
-        });
-      });
-    }
+  // ---------- app detail view
+  const BY_KEY = Object.fromEntries(APPS.map((a) => [a.key, a]));
+  const KIND_LABEL = { python: 'Python library', cli: 'CLI tool', macos: 'macOS app' };
 
-    const btn = document.getElementById('themeBtn');
-    btn.addEventListener('click', () => {
-      const cur = document.documentElement.getAttribute('data-theme');
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const next = cur ? (cur === 'dark' ? 'light' : 'dark') : (prefersDark ? 'light' : 'dark');
-      document.documentElement.setAttribute('data-theme', next);
-    });
+  function makeBtn(cls, label, { href, onClick, download } = {}) {
+    const n = document.createElement(href ? 'a' : 'button');
+    n.className = 'btn ' + cls;
+    n.textContent = label;
+    if (href) {
+      n.href = href;
+      if (download) n.setAttribute('download', '');
+      else if (/^https?:/.test(href)) { n.target = '_blank'; n.rel = 'noopener'; }
+    } else n.type = 'button';
+    if (onClick) n.addEventListener('click', onClick);
+    return n;
+  }
+  function showDetail(key) {
+    const a = BY_KEY[key]; if (!a) return;
+    const cat = CATS.find((c) => c.id === a.cat);
+    $('dIco').textContent = a.icon;
+    $('dCat').textContent = cat.icon + ' ' + cat.name + ' · ' + a.badge;
+    $('dName').textContent = a.name;
+    $('dDesc').textContent = a.desc;
+    $('dMeta').textContent = a.version ? KIND_LABEL[a.kind] + ' · v' + a.version : KIND_LABEL[a.kind];
 
-    // ---------------- Sign in ----------------
-    // 1) Create an OAuth Client ID at https://console.cloud.google.com/apis/credentials
-    //    (type: Web application), add your site to "Authorized JavaScript origins",
-    //    then paste the ID below. Google sign-in then works on your live domain.
-    // 2) Full sessions + gating who paid need a backend (Supabase/Firebase/Clerk or
-    //    your own with Polar) — wire it where marked in handleCredential()/email submit.
-    // Public OAuth client IDs. On Render these are served by /api/config from
-    // env vars; the placeholders let the page still render as a static file.
-    let GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
-    let GITHUB_CLIENT_ID = "";
-    async function loadAuthConfig() {
-      try {
-        const r = await fetch('/api/config', { cache: 'no-store' });
-        if (r.ok) {
-          const c = await r.json();
-          if (c.googleClientId) GOOGLE_CLIENT_ID = c.googleClientId;
-          if (c.githubClientId) GITHUB_CLIENT_ID = c.githubClientId;
-        }
-      } catch {}
-    }
+    const acts = $('dActions'); acts.innerHTML = '';
+    const note = $('dNote'); note.textContent = '';
 
-    const modal = document.getElementById('authModal');
-    const authNote = document.getElementById('authNote');
-    const signinLink = document.getElementById('signinLink');
-    const signinLabel = document.getElementById('signinLabel');
-
-    const openModal = () => { modal.classList.add('open'); authNote.textContent = ''; };
-    const closeModal = () => modal.classList.remove('open');
-
-    function currentUser() {
-      try { return JSON.parse(localStorage.getItem('dashovia_user') || 'null'); }
-      catch { return null; }
-    }
-    function setUser(user) {
-      if (user) localStorage.setItem('dashovia_user', JSON.stringify(user));
-      else localStorage.removeItem('dashovia_user');
-      renderAuth();
-    }
-    function renderAuth() {
-      const u = currentUser();
-      signinLabel.textContent = u ? (u.email || u.name || 'Signed in') : 'Sign in';
-      signinLink.title = u ? 'Click to sign out' : 'Sign in';
-    }
-
-    signinLink.addEventListener('click', () => {
-      if (currentUser()) { setUser(null); } else { openModal(); }
-    });
-    document.getElementById('authClose').addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
-
-    // Email option (client-side for now; connect a backend for real magic links).
-    document.getElementById('emailForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('emailInput').value.trim();
-      if (!email) return;
-      // TODO(backend): POST email to your auth backend to send a magic link.
-      setUser({ email });
-      closeModal();
-    });
-
-    // Google Identity Services
-    function decodeJWT(token) {
-      try {
-        const p = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        return JSON.parse(decodeURIComponent(escape(atob(p))));
-      } catch { return {}; }
-    }
-    function handleCredential(response) {
-      const payload = decodeJWT(response.credential);
-      // TODO(backend): send response.credential to your server to verify + create a session.
-      setUser({ email: payload.email, name: payload.name, picture: payload.picture });
-      closeModal();
-    }
-    let googleReady = false;
-    function initGoogle() {
-      if (googleReady) return true;
-      if (!window.google || !google.accounts || GOOGLE_CLIENT_ID.startsWith('YOUR_')) return false;
-      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredential });
-      googleReady = true;
-      return true;
-    }
-    document.getElementById('googleBtn').addEventListener('click', () => {
-      if (initGoogle()) {
-        google.accounts.id.prompt(); // Google account chooser
-      } else if (GOOGLE_CLIENT_ID.startsWith('YOUR_')) {
-        authNote.textContent = 'Add your Google Client ID in the code to enable Google sign-in on your live site.';
+    if (a.kind === 'macos') {
+      if (a.dmg) acts.appendChild(makeBtn('primary lg', '⬇ Download for macOS', { href: a.dmg, download: true }));
+      if (a.url) acts.appendChild(makeBtn(a.dmg ? 'lg' : 'primary lg', 'Visit website ↗', { href: a.url }));
+      if (a.buy) {
+        acts.appendChild(makeBtn('lime lg', 'Buy ' + a.name + ' · $4.99', { onClick: (e) => checkout(a.buy, e.currentTarget) }));
+        note.textContent = 'One-off purchase, yours to keep on one device. Or get it with any café subscription.';
       } else {
-        authNote.textContent = 'Google sign-in loads only on your deployed site (blocked in this preview).';
+        acts.appendChild(makeBtn('lg', 'See cups', { onClick: goPricing }));
+        note.textContent = 'A native, on-device Mac app. Included with every café subscription.';
       }
-    });
-    // ---------------- GitHub (redirect flow via /api/auth/github) ----------------
-    // GitHub's OAuth requires a server-side code→token exchange (the client secret
-    // must never reach the browser), so the button redirects to GitHub and the
-    // returned ?code= is exchanged by our /api/auth/github endpoint on Render.
-    const githubBtn = document.getElementById('githubBtn');
-    const ghRedirectUri = () => location.origin + location.pathname;
-
-    function startGithub() {
-      if (!GITHUB_CLIENT_ID) {
-        authNote.textContent = 'Set GITHUB_CLIENT_ID / GITHUB_CLIENT_SECRET on the server to enable GitHub sign-in.';
-        return;
-      }
-      const state = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2));
-      sessionStorage.setItem('dashovia_gh_state', state);
-      const p = new URLSearchParams({
-        client_id: GITHUB_CLIENT_ID,
-        redirect_uri: ghRedirectUri(),
-        scope: 'read:user user:email',
-        state,
-        allow_signup: 'true'
-      });
-      location.href = 'https://github.com/login/oauth/authorize?' + p.toString();
-    }
-    if (githubBtn) githubBtn.addEventListener('click', startGithub);
-
-    async function handleGithubCallback() {
-      const url = new URL(location.href);
-      const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state');
-      if (!code || !state) return;
-      const saved = sessionStorage.getItem('dashovia_gh_state');
-      sessionStorage.removeItem('dashovia_gh_state');
-      // Always strip code/state from the address bar, whatever the outcome.
-      url.searchParams.delete('code'); url.searchParams.delete('state');
-      history.replaceState(null, '', url.pathname + (url.search || '') + url.hash);
-      if (!saved || saved !== state) {
-        openModal(); authNote.textContent = 'GitHub sign-in expired — please try again.';
-        return;
-      }
-      try {
-        const r = await fetch('/api/auth/github', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, redirect_uri: ghRedirectUri() })
-        });
-        const data = await r.json();
-        if (!r.ok || data.error) throw new Error(data.error || 'exchange failed');
-        setUser({ provider: 'github', login: data.login, name: data.name || data.login,
-                  email: data.email || '', picture: data.avatarUrl || '' });
-      } catch (e) {
-        openModal();
-        authNote.textContent = 'Could not complete GitHub sign-in.' + (e && e.message ? ' (' + e.message + ')' : '');
-      }
+    } else {
+      note.textContent = 'On the house: free to use, no account needed.';
     }
 
-    loadAuthConfig();
-    handleGithubCallback();
-    window.addEventListener('load', () => setTimeout(initGoogle, 800));
-    renderAuth();
+    $('dShots').hidden = !a.shots;
+    if (a.shots) buildShots();
 
-    // ---------------- App detail pages (CalX-style) ----------------
-    const PLAN = 'from $3.99/month';
-    const APPS = {
-      'htmlpdf':   {icon:'🖤', cat:'On the House · Free tools', catId:'on-the-house', kind:'python', desc:'Convert HTML to a paginated PDF using only the Python standard library — no browser, no C libraries, no dependencies. Headings, lists, quotes, code, links and automatic pagination.'},
-      'sitepdf':   {icon:'🕸️', cat:'On the House · Free tools', catId:'on-the-house', kind:'python', desc:'Crawl a whole website and save it — images, JavaScript and real layout included — as one bookmarked PDF, using headless Chromium.'},
-      'redactor':  {icon:'🛡️', cat:'On the House · Free tools', catId:'on-the-house', kind:'python', desc:'Detect and reversibly mask PII / secrets in text before it reaches an LLM, then restore the model’s reply.'},
-      'chunkwise': {icon:'🌿', cat:'On the House · Free tools', catId:'on-the-house', kind:'python', desc:'Token-aware, boundary-respecting text chunking (recursive, sentence, markdown) with overlap, metadata and a pluggable token counter.'},
-      'promptkit': {icon:'🧩', cat:'On the House · Free tools', catId:'on-the-house', kind:'python', desc:'A prompt template engine: required-variable validation, few-shot rendering, a chat/message builder and a versioned registry.'},
-      'vectorlite':{icon:'🔎', cat:'On the House · Free tools', catId:'on-the-house', kind:'python', desc:'A tiny in-memory vector store: cosine / dot / euclidean, top-k, metadata filtering, MMR re-ranking and JSON persistence. No numpy.'},
-      'llmparse':  {icon:'🧬', cat:'On the House · Free tools', catId:'on-the-house', kind:'python', desc:'Robustly extract and repair JSON from messy LLM text (code fences, prose, trailing commas, single quotes) and coerce it to a schema.'},
-      'publishkey':{icon:'🚀', cat:'On the House · Free tools', catId:'on-the-house', kind:'cli', desc:'Press one key, ship your web app — detect FastAPI / Flask / Streamlit / Django and deploy it to the cloud.'},
-      'kadak':     {icon:'💪', cat:'Kadak Chai · Capture & PDF', catId:'kadak-chai', kind:'macos', version:'1.0.0', updated:'2026', price:'4.99', shots:true, desc:'Brew any website into a full-page PDF, plus up to 10 screenshots. A native macOS app with a clean, one-screen flow.'},
-      'cubby':     {icon:'📦', cat:'Masala Chai · Live web apps', catId:'masala-chai', kind:'web', open:'https://cubby.dashovia.app', desc:'Your little corner of the web — stash links, files and notes in one tidy cubby. (Confirm tagline & URL.)'},
-      'cadence':   {icon:'🥁', cat:'Masala Chai · Live web apps', catId:'masala-chai', kind:'web', open:'https://cadence.dashovia.app', desc:'Keep your team in rhythm — async standups and one calm daily digest, delivered where you already work.'},
-      'cairn':     {icon:'🗿', cat:'Masala Chai · Live web apps', catId:'masala-chai', kind:'web', open:'https://cairn.dashovia.app', desc:'Mark the path — lightweight milestones and progress markers for any project. (Confirm tagline & URL.)'},
-      'resumebaker':{icon:'📄', cat:'Kadak Chai · Native macOS apps', catId:'kadak-chai', kind:'macos', version:'1.0.3', updated:'2026', dmg:'downloads/ResumeBaker_1.0.3.dmg', desc:'Bake a polished résumé in minutes — pick a template, fill in the blanks and export a clean, recruiter-ready PDF. A native macOS app.'},
-    };
+    $('menuView').hidden = true;
+    $('detailView').hidden = false;
+    scrollTo(0, 0);
+    history.replaceState(null, '', '#app/' + encodeURIComponent(key));
+    document.title = a.name + ' · Dashovia Café';
+  }
+  function hideDetail() {
+    $('detailView').hidden = true; $('menuView').hidden = false;
+    document.title = 'Dashovia Café · apps, served fresh';
+  }
+  function goPricing() { hideDetail(); history.replaceState(null, '', '#pricing'); $('pricing').scrollIntoView(); }
 
-    const el = (id) => document.getElementById(id);
-    const menuView = el('menuView'), detailView = el('detailView');
-    const NAMEBY = {};
+  $('detailBack').addEventListener('click', () => { hideDetail(); history.replaceState(null, '', '#menu'); $('menu').scrollIntoView(); });
 
-    document.querySelectorAll('.app').forEach(card => {
-      const disp = card.querySelector('.app-nm').textContent.trim();
-      const key = disp.toLowerCase();
-      NAMEBY[key] = disp;
-      card.setAttribute('role', 'button');
-      card.tabIndex = 0;
-      card.addEventListener('click', () => showDetail(key));
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showDetail(key); }
-      });
-    });
+  function buildShots() {
+    const samples = [
+      '<span class="c"># Welcome to Kadak</span>\n\n<span class="s">1.</span> Paste a URL\n<span class="s">2.</span> Pick screenshots (0–10)\n<span class="s">3.</span> Brew → PDF + PNGs\n\n<span class="c">Saved to ~/Downloads/Kadak/</span>',
+      'Screenshots  <span class="f">▓▓▓▓▓▓▓▓</span>░░  8/10\n\nexample.com … <span class="s">loaded</span>\nExporting PDF … <span class="s">done</span>\n<span class="s">✓</span> example.com.pdf\n<span class="s">✓</span> example.com-01.png … -08.png',
+    ];
+    $('dShotsRow').innerHTML = samples.map((s) =>
+      `<div class="shot"><div class="mock"><div class="dots"><i></i><i></i><i></i></div><div class="code">${s}</div></div></div>`).join('');
+  }
 
-    function makeBtn(cls, label, { href, blank, onClick, version, disabled, download } = {}) {
-      const node = href ? document.createElement('a') : document.createElement('button');
-      node.className = cls;
-      node.innerHTML = label + (version ? ' <span class="vtag">v' + version + '</span>' : '');
-      if (href) { node.href = href; if (blank) { node.target = '_blank'; node.rel = 'noopener'; } if (download) node.setAttribute('download', ''); }
-      else { node.type = 'button'; }
-      if (onClick) node.addEventListener('click', onClick);
-      if (disabled) { node.style.opacity = '.6'; node.style.cursor = 'default'; }
-      return node;
+  // #app/<key> opens a detail page; any other #section link closes it and scrolls there.
+  function routeFromHash() {
+    if (location.hash.startsWith('#app/')) return showDetail(decodeURIComponent(location.hash.slice(5)));
+    if (!$('detailView').hidden) {
+      hideDetail();
+      const target = location.hash && document.getElementById(location.hash.slice(1));
+      if (target) target.scrollIntoView(); else scrollTo(0, 0);
     }
-    function copyPill(text) {
-      const b = document.createElement('button');
-      b.className = 'code-pill'; b.type = 'button';
-      const dollar = document.createElement('span'); dollar.className = 'cp'; dollar.textContent = '$';
-      const label = document.createElement('span'); label.textContent = text;
-      const hint = document.createElement('span'); hint.className = 'cp'; hint.textContent = 'copy';
-      b.append(dollar, label, hint);
-      b.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(text); hint.textContent = 'copied ✓'; setTimeout(() => hint.textContent = 'copy', 1500); }
-        catch { hint.textContent = 'select to copy'; }
-      });
-      return b;
-    }
-
-    function showDetail(key) {
-      const a = APPS[key];
-      if (!a) return;
-      el('dIco').textContent = a.icon;
-      el('dCat').textContent = a.cat;
-      el('dName').textContent = NAMEBY[key] || key;
-      el('dDesc').textContent = a.desc;
-      el('dMeta').textContent = a.version
-        ? ('Updated ' + (a.updated || '') + ' · v' + a.version)
-        : ({ python: 'Python library', cli: 'CLI tool', web: 'Web app', api: 'REST API' }[a.kind] || '');
-
-      const acts = el('dActions'); acts.innerHTML = '';
-      const note = el('dNote'); note.innerHTML = '';
-
-      if (a.kind === 'macos') {
-        acts.appendChild(makeBtn('btn-primary', '⬇&nbsp; Download for macOS',
-          a.dmg ? { href: a.dmg, download: true, version: a.version } : { onClick: goPricing, version: a.version }));
-        if (a.price) {
-          acts.appendChild(makeBtn('btn-secondary', 'Buy ' + NAMEBY[key] + ' · $' + a.price, { onClick: goPricing }));
-          note.innerHTML = 'One-off purchase, yours to keep on one device. <a href="#pricing" data-close>Or unlock the whole menu ' + PLAN + '.</a>';
-        } else {
-          note.innerHTML = 'Free download — a native macOS app, yours to keep. <a href="#pricing" data-close>Or unlock the whole menu ' + PLAN + '.</a>';
-        }
-      } else if (a.kind === 'web') {
-        acts.appendChild(makeBtn('btn-primary', 'Open app&nbsp; ↗', { href: a.open, blank: true }));
-        if (a.web2) acts.appendChild(makeBtn('btn-secondary', 'Web app&nbsp; ↗', { href: a.web2, blank: true }));
-        note.innerHTML = a.note || 'Live now. Included when you unlock the whole menu — <a href="#pricing" data-close>' + PLAN + '</a>.';
-      } else if (a.kind === 'python' || a.kind === 'cli') {
-        acts.appendChild(makeBtn('btn-primary', 'Get started', { onClick: openModal }));
-        note.textContent = 'On the house — free to use. Sign in to get started.';
-      }
-
-      if (a.shots) { el('dShots').hidden = false; buildShots(); } else { el('dShots').hidden = true; }
-
-      el('detailBack').textContent = '← Back to ' + a.cat.split(' · ')[0];
-      detailView.dataset.cat = a.catId;
-      menuView.hidden = true;
-      detailView.hidden = false;
-      window.scrollTo(0, 0);
-      history.replaceState(null, '', '#app/' + encodeURIComponent(key));
-    }
-
-    function hideDetail() { detailView.hidden = true; menuView.hidden = false; }
-    function goPricing() { hideDetail(); const p = el('pricing'); if (p) p.scrollIntoView(); history.replaceState(null, '', '#pricing'); }
-
-    el('detailBack').addEventListener('click', () => {
-      const cat = detailView.dataset.cat; hideDetail();
-      if (cat) { const s = el(cat); if (s) s.scrollIntoView(); history.replaceState(null, '', '#' + cat); }
-    });
-    el('detailBack').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el('detailBack').click(); } });
-    detailView.addEventListener('click', (e) => {
-      const close = e.target.closest('[data-close]');
-      if (close) { e.preventDefault(); goPricing(); }
-    });
-    // Sidebar links close the detail view before their anchor scroll runs.
-    document.querySelectorAll('.side a[href^="#"]').forEach(a =>
-      a.addEventListener('click', () => { if (!detailView.hidden) hideDetail(); }));
-
-    function buildShots() {
-      const row = el('dShotsRow'); row.innerHTML = '';
-      const samples = [
-        '# Welcome to Kadak\n\n1. Paste a URL\n2. Pick screenshots (0–10)\n3. Brew → PDF + PNGs\n\nSaved to ~/Downloads/Kadak/',
-        'Screenshots  ▓▓▓▓▓▓▓▓░░  8/10\n\nexample.com … loaded\nExporting PDF … done\n✓ example.com.pdf\n✓ example.com-01.png … -08.png'
-      ];
-      samples.forEach(txt => {
-        const s = document.createElement('div'); s.className = 'shot';
-        const bar = document.createElement('div'); bar.className = 'shot-bar';
-        ['#ff5f57', '#febc2e', '#28c840'].forEach(c => { const i = document.createElement('i'); i.style.background = c; bar.appendChild(i); });
-        const body = document.createElement('div'); body.className = 'shot-body'; body.textContent = txt;
-        s.append(bar, body); row.appendChild(s);
-      });
-    }
-
-    function routeFromHash() {
-      if (location.hash.startsWith('#app/')) {
-        const key = decodeURIComponent(location.hash.slice(5));
-        if (APPS[key]) showDetail(key);
-      }
-    }
-    window.addEventListener('hashchange', routeFromHash);
-    routeFromHash();
-  </script>
+  }
+  addEventListener('hashchange', routeFromHash);
+  routeFromHash();
+</script>
 </body>
 </html>

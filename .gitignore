@@ -4,3 +4,6 @@ node_modules/
 .netlify
 .env
 .env.local
+
+# Paid-customer records written by the Dodo webhook
+data/
