@@ -28,18 +28,6 @@
   <a class="btn primary sm hide-sm" href="/#pricing">Start free</a>
 </div></nav>`;
   }
-  const footEl = $('site-foot');
-  if (footEl) {
-    footEl.outerHTML = `
-<footer class="foot">
-  <div class="row wrap" style="justify-content:center;gap:6px 16px;margin-bottom:8px">
-    <a href="/blog">Blog</a><a href="/support">Support</a><a href="/refer">Refer &amp; earn</a>
-    <a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refunds">Refunds</a>
-    <a href="${APIS_URL}" target="_blank" rel="noopener">APIs ↗</a>
-  </div>
-  © ${new Date().getFullYear()} dashovia.café · apps, served fresh · <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
-</footer>`;
-  }
   const nav = $('nav');
   if (nav) addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 8), { passive: true });
 
