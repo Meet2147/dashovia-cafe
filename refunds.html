@@ -40,9 +40,15 @@
 <h2>One-time purchases (like Kadak)</h2>
 <p>Ask within <b>14 days</b> of purchase for a full refund. After a refund, the licence is deactivated.</p>
 
+<div class="callout" id="refundBox">
+  <h3>Request a refund</h3>
+  <div id="refundBody"><p class="muted" style="margin:0 0 14px">Sign in with the account you paid with to see your payments.</p>
+    <button class="btn primary" type="button" id="refundSignIn">Sign in</button></div>
+</div>
+
 <h2>How to ask for a refund</h2>
 <ol>
-  <li>Email <a href="mailto:contact@dashovia.app?subject=Refund%20request">contact@dashovia.app</a> from the email address you used at checkout.</li>
+  <li>Sign in and use the form above, or email <a href="mailto:contact@dashovia.app?subject=Refund%20request">contact@dashovia.app</a> from the email address you used at checkout.</li>
   <li>Include your order or receipt number (it's in your receipt email from Dodo Payments).</li>
   <li>That's it. You don't need to give a reason.</li>
 </ol>
@@ -65,5 +71,39 @@ purchase made through a referral link, the referral reward for that purchase is 
   © 2026 dashovia.café · apps, served fresh · <a href="mailto:contact@dashovia.app">contact@dashovia.app</a>
 </footer>
 <script src="/assets/common.js"></script>
+<script>
+  const money = (v, c) => { try { return (v / 100).toLocaleString(undefined, { style: 'currency', currency: c }); } catch { return (v / 100).toFixed(2) + ' ' + c; } };
+  const box = document.getElementById('refundBody');
+  document.getElementById('refundSignIn').addEventListener('click', () => Cafe.openSignIn('Sign in with the account you paid with.'));
+  Cafe.onUser(async (u) => {
+    if (!u) return;
+    box.innerHTML = '<p class="muted">Loading your payments…</p>';
+    let d;
+    try { d = await Cafe.api('/api/refunds'); }
+    catch (e) { box.innerHTML = `<p class="muted">${Cafe.esc(e.message)} You can also email <a href="mailto:contact@dashovia.app">contact@dashovia.app</a>.</p>`; return; }
+    const esc = Cafe.esc;
+    const reqs = d.requests.map((r) => `<li>${esc(r.product)} · ${money(r.amount, r.currency)}: <span class="chip ${r.status === 'refunded' ? 'ok' : 'flame'}">${esc(r.status === 'new' ? 'requested' : r.status)}</span></li>`).join('');
+    const eligible = d.payments.filter((p) => p.eligible);
+    box.innerHTML = (reqs ? `<p style="margin:0 0 6px"><b>Your requests</b></p><ul style="margin:0 0 14px">${reqs}</ul>` : '') +
+      (eligible.length ? `<form id="refundForm">
+        <p style="margin:0 0 8px"><b>Which payment?</b></p>
+        ${eligible.map((p, i) => `<label class="radio-row"><input type="radio" name="pay" value="${esc(p.payment_id)}" ${i ? '' : 'checked'}>
+          ${esc(p.product)} · ${money(p.amount, p.currency)} · ${new Date(p.created_at).toLocaleDateString()}</label>`).join('')}
+        <label class="fl" for="refundReason">Anything we should know? <span class="muted">(optional)</span></label>
+        <textarea id="refundReason" rows="3" maxlength="800"></textarea>
+        <button class="btn primary" type="submit" style="margin-top:12px">Request refund</button></form>`
+      : `<p class="muted" style="margin:0">No payments from the last ${d.days} days can be refunded on <b>${esc(u.email)}</b>. Paid with a different email? Sign in with that one, or email us.</p>`);
+    const form = document.getElementById('refundForm');
+    if (form) form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.submitter; btn.disabled = true;
+      try {
+        await Cafe.api('/api/refunds', { payment_id: form.pay.value, reason: document.getElementById('refundReason').value });
+        Cafe.toast('Refund requested. We’ll email you once it’s processed.', 'ok');
+        location.reload();
+      } catch (err) { Cafe.toast(err.message, 'bad'); btn.disabled = false; }
+    });
+  });
+</script>
 </body>
 </html>

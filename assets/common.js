@@ -149,7 +149,9 @@
         <div class="who"><b>${esc(user.name || 'Signed in')}</b><span>${esc(user.email)}</span></div>
         <button id="portalBtn" role="menuitem">🧾 Manage subscription</button>
         <a href="/refer" role="menuitem">🎁 Refer &amp; earn</a>
+        <a href="/review" role="menuitem">✍️ Write a review</a>
         <a href="/support" role="menuitem">💬 Support</a>
+        ${user.isAdmin ? '<a href="/admin" role="menuitem">👑 Admin</a>' : ''}
         <button id="logoutBtn" role="menuitem">👋 Sign out</button>
       </div>`;
     $('userBtn').addEventListener('click', (e) => {
@@ -255,5 +257,5 @@
     await handleGithubReturn();
   })();
 
-  window.Cafe = { toast, esc, openSignIn, onUser, getUser: () => user, getRef, SUPPORT_EMAIL };
+  window.Cafe = { toast, esc, api, openSignIn, onUser, getUser: () => user, getRef, SUPPORT_EMAIL };
 })();

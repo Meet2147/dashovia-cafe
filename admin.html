@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Dashovia Café</title>
+  <meta name="description" content="Dashovia Café admin." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%96%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script>try { const t = localStorage.getItem('dashovia_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch {}</script>
+  <link rel="stylesheet" href="/assets/site.css" />
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="page wide">
+<div class="page-hero row wrap" style="align-items:flex-end;gap:14px">
+  <div class="grow"><span class="chip violet">👑 Admin</span><h1 style="margin-bottom:0">Café back office</h1></div>
+  <a class="btn sm" href="/api/admin/users.csv" id="csvBtn" hidden>⬇ Export sign-ups CSV</a>
+  <button class="btn sm" id="reloadBtn" hidden>↻ Refresh</button>
+</div>
+<div id="adminRoot"><p class="muted">Loading…</p></div>
+</main>
+<footer class="foot" id="site-foot-static">
+  <div class="row wrap" style="justify-content:center;gap:6px 16px;margin-bottom:8px">
+    <a href="/blog">Blog</a><a href="/support">Support</a><a href="/refer">Refer &amp; earn</a>
+    <a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a><a href="/refunds">Refund Policy</a>
+  </div>
+  © 2026 dashovia.café · apps, served fresh · <a href="mailto:contact@dashovia.app">contact@dashovia.app</a>
+</footer>
+<script src="/assets/common.js"></script>
+<script>
+  const root = document.getElementById('adminRoot');
+  const esc = Cafe.esc;
+  const money = (v, c) => { try { return (v / 100).toLocaleString(undefined, { style: 'currency', currency: c || 'USD' }); } catch { return (v / 100).toFixed(2) + ' ' + (c || ''); } };
+  const date = (d) => d ? new Date(d).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+  const section = (id, title) => `<section class="card admin-card" id="${id}"><h2>${title}</h2><div class="body"><p class="muted">Loading…</p></div></section>`;
+  const body = (id) => document.querySelector('#' + id + ' .body');
+  const post = (url, data) => Cafe.api(url, data);
+
+  async function load() {
+    let s;
+    try { s = await Cafe.api('/api/admin/summary'); }
+    catch (e) {
+      root.innerHTML = `<div class="callout"><h3>🔒 ${esc(e.message)}</h3><p class="muted" style="margin:0 0 14px">Sign in with an admin account to see this page.</p>
+        <button class="btn primary" onclick="Cafe.openSignIn()">Sign in</button></div>`;
+      return;
+    }
+    document.getElementById('csvBtn').hidden = false;
+    document.getElementById('reloadBtn').hidden = false;
+    const d = s.dodo;
+    const rev = d ? Object.entries(d.revenue).map(([c, v]) => money(v, c)).join(' + ') || money(0) : '—';
+    const kpi = (l, v, sub) => `<div class="card kpi"><span class="l">${l}</span><span class="v">${v}</span>${sub ? `<span class="s">${sub}</span>` : ''}</div>`;
+    root.innerHTML = `
+      ${s.store === 'file' ? '<p class="chip flame" style="margin:0 0 14px">⚠️ No database connected (DATABASE_URL). Sign-ups, reviews and refund requests will be lost on the next deploy.</p>' : ''}
+      ${s.dodo_error ? `<p class="chip flame" style="margin:0 0 14px">⚠️ Couldn’t load Dodo data: ${esc(s.dodo_error)}</p>` : ''}
+      <div class="kpis">
+        ${kpi('Sign-ups', s.users, `+${s.signups_7d} this week`)}
+        ${kpi('Paying subscribers', d ? d.active : '—', d ? `${d.cancelled} cancelled` : '')}
+        ${kpi('On free trial', d ? d.trial : '—')}
+        ${kpi('Revenue', rev, d ? `${d.payments} payments` : '')}
+        ${kpi('To do', s.refunds_new + s.reviews_pending, `${s.refunds_new} refunds · ${s.reviews_pending} reviews`)}
+      </div>
+      ${d ? `<div class="card admin-card"><b>Active plans:</b> ${Object.entries(d.by_plan).map(([k, v]) => `<span class="chip">${esc(k)}: ${v}</span>`).join(' ')}</div>` : ''}
+      ${section('refunds', '💸 Refund requests')}
+      ${section('reviews', '⭐ Reviews')}
+      ${section('payments', '🧾 Latest payments')}
+      ${section('referrals', '🎁 Referrals')}
+      ${section('signups', '👋 Latest sign-ups')}`;
+
+    // payments
+    body('payments').innerHTML = !d ? '<p class="muted">Dodo isn’t connected.</p>' : d.recent_payments.length ? `<div class="tbl"><table class="data">
+      <tr><th>Date</th><th>Customer</th><th>Product</th><th>Amount</th><th>Status</th><th>Referral</th></tr>
+      ${d.recent_payments.map((p) => `<tr><td>${date(p.created_at)}</td><td>${esc(p.email)}</td><td>${esc(p.product)}</td><td>${money(p.amount, p.currency)}</td>
+        <td><span class="chip ${p.status === 'succeeded' ? 'ok' : ''}">${esc(p.status)}</span>${p.refund_status ? ` <span class="chip flame">refund ${esc(p.refund_status)}</span>` : ''}</td>
+        <td><code>${esc(p.referrer)}</code></td></tr>`).join('')}</table></div>` : '<p class="muted">No payments yet.</p>';
+
+    // sign-ups
+    body('signups').innerHTML = s.recent.length ? `<div class="tbl"><table class="data">
+      <tr><th>Name</th><th>Email</th><th>Via</th><th>Referral code</th><th>Joined</th><th>Last seen</th></tr>
+      ${s.recent.map((u) => `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.provider)}</td><td><code>${esc(u.refCode)}</code></td>
+        <td>${date(u.first_seen)}</td><td>${date(u.last_seen)}</td></tr>`).join('')}</table></div>` : '<p class="muted">No sign-ups yet.</p>';
+
+    renderRefunds(); renderReviews(); renderReferrals();
+  }
+
+  async function renderRefunds() {
+    const { refunds } = await Cafe.api('/api/admin/refunds');
+    const el = body('refunds');
+    const todo = refunds.filter((r) => r.status === 'new').length;
+    document.querySelector('#refunds h2').textContent = `💸 Refund requests (${todo} to do)`;
+    el.innerHTML = `<p class="small muted" style="margin-top:-4px">“Refund now” issues a full refund through Dodo straight away. The status flips to refunded when Dodo confirms.</p>` +
+      (refunds.length ? `<div class="tbl"><table class="data">
+      <tr><th>Requested</th><th>Customer</th><th>Product</th><th>Amount</th><th>Paid</th><th>Reason</th><th>Status</th><th></th></tr>
+      ${refunds.map((r) => `<tr><td>${date(r.requested_at)}</td><td><b>${esc(r.name)}</b><div class="small muted">${esc(r.email)}</div></td>
+        <td>${esc(r.product)}</td><td>${money(r.amount, r.currency)}</td><td>${date(r.paid_at)}<div class="small muted"><code>${esc(r.payment_id)}</code></div></td>
+        <td class="small" style="max-width:260px">${esc(r.reason) || '<span class="muted">—</span>'}</td>
+        <td><span class="chip ${r.status === 'refunded' ? 'ok' : r.status === 'new' ? 'flame' : ''}">${esc(r.status)}</span></td>
+        <td class="actions">${r.status === 'new' ? `<button class="btn sm lime" data-rf="${r.id}" data-act="refund">Refund now</button> <button class="btn sm ghost" data-rf="${r.id}" data-act="decline">Decline</button>`
+          : r.status === 'declined' || r.status === 'failed' ? `<button class="btn sm ghost" data-rf="${r.id}" data-act="reopen">Reopen</button>` : ''}</td></tr>`).join('')}</table></div>`
+      : '<p class="muted">No refund requests.</p>');
+    el.querySelectorAll('[data-rf]').forEach((b) => b.addEventListener('click', async () => {
+      const r = refunds.find((x) => x.id === b.dataset.rf);
+      if (b.dataset.act === 'refund' && !confirm(`Refund ${money(r.amount, r.currency)} to ${r.email}? This can’t be undone.`)) return;
+      b.disabled = true;
+      try { await post('/api/admin/refunds/' + b.dataset.rf, { action: b.dataset.act }); Cafe.toast(b.dataset.act === 'refund' ? 'Refund issued 💸' : 'Updated', 'ok'); }
+      catch (e) { Cafe.toast(e.message, 'bad'); }
+      renderRefunds();
+    }));
+  }
+
+  async function renderReviews() {
+    const { reviews } = await Cafe.api('/api/admin/reviews');
+    const el = body('reviews');
+    document.querySelector('#reviews h2').textContent = `⭐ Reviews (${reviews.filter((r) => !r.approved).length} waiting)`;
+    el.innerHTML = reviews.length ? reviews.map((t) => `<div class="review-row">
+      <div class="grow" style="min-width:240px">
+        <div><span class="stars">${'★'.repeat(t.rating)}${'☆'.repeat(5 - t.rating)}</span> <b>${esc(t.name)}</b> <span class="muted small">${esc(t.email)}${t.org ? ' · ' + esc(t.org) : ''} · ${date(t.updated_at)}</span></div>
+        <div style="margin-top:4px">“${esc(t.quote)}”</div>
+        ${t.improve ? `<div class="private-note">🛠️ <b>Could be better (private):</b> ${esc(t.improve)}</div>` : ''}
+      </div>
+      <span class="chip ${t.approved ? 'ok' : 'flame'}">${t.approved ? 'live' : 'pending'}</span>
+      <button class="btn sm" data-rv="${esc(t.id)}" data-act="${t.approved ? 'hide' : 'approve'}">${t.approved ? 'Hide' : 'Approve'}</button>
+      <button class="btn sm ghost" data-rv="${esc(t.id)}" data-act="delete">Delete</button></div>`).join('') : '<p class="muted">No reviews yet.</p>';
+    el.querySelectorAll('[data-rv]').forEach((b) => b.addEventListener('click', async () => {
+      if (b.dataset.act === 'delete' && !confirm('Delete this review?')) return;
+      try { await post('/api/admin/reviews/' + encodeURIComponent(b.dataset.rv), { action: b.dataset.act }); } catch (e) { Cafe.toast(e.message, 'bad'); }
+      renderReviews();
+    }));
+  }
+
+  async function renderReferrals() {
+    const el = body('referrals');
+    let list;
+    try { ({ referrals: list } = await Cafe.api('/api/admin/referrals')); }
+    catch (e) { el.innerHTML = `<p class="muted">${esc(e.message)}</p>`; return; }
+    el.innerHTML = `<p class="small muted" style="margin-top:-4px">Give the referrer a free month once the friend’s payment is past the 14-day refund window, then tick “Rewarded”.</p>` +
+      (list.length ? `<div class="tbl"><table class="data">
+      <tr><th>Date</th><th>Friend</th><th>Product</th><th>Referred by</th><th>Ready?</th><th>Rewarded</th></tr>
+      ${list.map((r) => `<tr><td>${date(r.created_at)}</td><td>${esc(r.buyer)}</td><td>${esc(r.product)} · ${money(r.amount, r.currency)}</td>
+        <td>${r.referrer ? esc(r.referrer) : '<span class="muted">unknown</span>'}<div class="small muted"><code>${esc(r.code)}</code></div></td>
+        <td>${r.refunded ? '<span class="chip">refunded</span>' : r.reward_ready ? '<span class="chip ok">ready</span>' : '<span class="chip">in refund window</span>'}</td>
+        <td><input type="checkbox" data-rw="${esc(r.payment_id)}" ${r.rewarded ? 'checked' : ''} aria-label="Rewarded" style="width:auto"></td></tr>`).join('')}</table></div>`
+      : '<p class="muted">No referred purchases yet.</p>');
+    el.querySelectorAll('[data-rw]').forEach((c) => c.addEventListener('change', async () => {
+      try { await post('/api/admin/referrals/' + encodeURIComponent(c.dataset.rw), { rewarded: c.checked }); Cafe.toast('Saved', 'ok'); }
+      catch (e) { Cafe.toast(e.message, 'bad'); c.checked = !c.checked; }
+    }));
+  }
+
+  document.getElementById('reloadBtn').addEventListener('click', load);
+  Cafe.onUser(() => load());
+</script>
+</body>
+</html>

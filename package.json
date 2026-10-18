@@ -2,11 +2,14 @@
   "name": "dashovia-cafe",
   "version": "1.0.0",
   "private": true,
-  "description": "dashovia.café storefront + a lightweight GitHub OAuth endpoint",
+  "description": "dashovia.café storefront, sign-in, Dodo Payments checkout and admin",
   "engines": {
     "node": ">=18"
   },
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
   }
 }

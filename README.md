@@ -10,8 +10,8 @@ the menu.
 The look follows a bold, playful style: cream/ink surfaces, violet + lime
 accents, chunky outlined buttons with hard shadows, and a scrolling marquee.
 
-It's one `index.html` plus a tiny dependency-free `server.js` (Node 18+) that
-handles sign-in and Dodo Payments checkout.
+It's static pages plus a small `server.js` (Node 18+, one dependency: `pg`)
+that handles sign-in, Dodo Payments checkout, reviews, refunds and the admin.
 
 ## Editing links and apps
 
@@ -30,9 +30,8 @@ Every link on the site lives in the `LINKS` and `APPS` blocks at the top of the
 
 Flow: a pricing button calls `POST /api/checkout`, which creates a Dodo
 checkout session and redirects the buyer to Dodo's hosted page. Dodo sends them
-back to `/?checkout=done`. Signed webhook events are verified and saved to
-`data/customers.json` (not served publicly, gitignored). On Render's free plan
-that file resets on every deploy, so move it to a database before relying on it.
+back to `/?checkout=done`. Signed webhook events are verified; refund events
+update the matching refund request. Dodo stays the source of truth for sales.
 
 ## Preview locally
 
@@ -114,6 +113,35 @@ subscription" (Dodo customer portal) and their own referral link.
   and callback URL: `https://getapps.dashovia.cafe/`. Set `GITHUB_CLIENT_ID` and
   `GITHUB_CLIENT_SECRET`.
 - Set `SESSION_SECRET` (the Render blueprint generates one).
+
+## Admin (`/admin`)
+
+Sign in with an email listed in `ADMIN_EMAILS` (default `meetjethwa3@gmail.com`)
+and open **👑 Admin** from the account menu. It shows:
+
+- Sign-ups, paying subscribers, trials and revenue (sales numbers come live from Dodo)
+- **Refund requests** from the in-site form on `/refunds`, with a one-click
+  **Refund now** that issues a full refund through Dodo
+- **Reviews** submitted on `/review`: approve, hide or delete (approved ones
+  appear on the home page under "Word of Mouth")
+- Latest payments, **referrals** (who referred whom, ready-to-reward, and a
+  "Rewarded" tick), and the sign-up list with CSV export
+
+### Database
+
+Reviews, refund requests, sign-ups and referral rewards are stored in Postgres
+(`DATABASE_URL`) in their own `cafe` schema. The café shares CodeStreak's Render
+Postgres through a restricted `cafe_app` login that can't see CodeStreak's
+tables. Create it once with the CodeStreak owner URL:
+
+```bash
+npm install
+node scripts/setup-db.js "<CodeStreak External Database URL>"
+```
+
+It prints the café's own `DATABASE_URL`; put that (not the owner URL) in the
+café's Render environment. Without `DATABASE_URL` the server falls back to
+`data/store.json`, which is fine locally but is wiped on each Render deploy.
 
 ## Refer & Earn
 

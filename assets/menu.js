@@ -70,9 +70,24 @@
     $('catGrid').innerHTML = CATS.map(catCard).join('');
     $('picksGrid').innerHTML = PICKS.map(pickCard).join('');
     $('menuCount').textContent = APPS.length;
+    loadReviews();
     const words = ['☕ apps, served fresh', ...APPS.map((a) => a.name), '🔒 on-device', '🫖 one subscription'];
     const run = words.map((w, i) => `<span class="${i % 2 ? 'alt' : ''}">${esc(w)}</span>`).join('');
     $('marq').innerHTML = run + run;
+  }
+
+  async function loadReviews() {
+    const box = $('reviewList'); if (!box) return;
+    let reviews = [];
+    try { ({ reviews } = await window.Cafe.api('/api/reviews')); } catch {}
+    box.innerHTML = reviews.length ? reviews.slice(0, 9).map((t) => `<figure class="card testimonial">
+        <div class="stars" aria-label="${t.rating} out of 5">${'★'.repeat(t.rating)}${'☆'.repeat(5 - t.rating)}</div>
+        <blockquote>“${esc(t.quote)}”</blockquote>
+        <figcaption><b>${esc(t.name)}</b>${t.org ? `<span>${esc(t.org)}</span>` : ''}</figcaption></figure>`).join('')
+      : `<div class="card testimonial empty"><div style="font-size:30px">🌱</div>
+        <h3>We’re brand new, and that’s your edge.</h3>
+        <p class="muted">The café just opened. Try an app, and your review could be the first one here.</p>
+        <a class="btn primary" href="/review">Write the first review</a></div>`;
   }
 
   // ---------- shell pages

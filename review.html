@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Write a review · Dashovia Café</title>
+  <meta name="description" content="Tell other people what you think of Dashovia Café." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AB%96%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <script>try { const t = localStorage.getItem('dashovia_theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch {}</script>
+  <link rel="stylesheet" href="/assets/site.css" />
+</head>
+<body>
+<div id="site-nav"></div>
+<main class="page">
+<div class="page-hero">
+  <span class="chip lime">✍️ Reviews</span>
+  <h1>How was your cup?</h1>
+  <p>Tell other people what you think of the café. Every review is read by a human before it goes live.</p>
+</div>
+
+<div class="callout" id="rvSignedOut">
+  <h3>Sign in to write a review</h3>
+  <p class="muted" style="margin:0 0 14px">So we know reviews come from real people. One click with Google or GitHub.</p>
+  <button class="btn primary" id="rvSignIn">Sign in</button>
+</div>
+
+<form class="callout" id="rvForm" hidden>
+  <p class="chip" id="rvStatus" hidden></p>
+  <label class="fl">Your rating</label>
+  <div class="stars-input" id="rvStars" role="radiogroup" aria-label="Rating">
+    <button type="button" data-v="1" aria-label="1 star">★</button><button type="button" data-v="2" aria-label="2 stars">★</button><button type="button" data-v="3" aria-label="3 stars">★</button><button type="button" data-v="4" aria-label="4 stars">★</button><button type="button" data-v="5" aria-label="5 stars">★</button>
+  </div>
+  <div class="form-row">
+    <div><label class="fl" for="rvName">Name shown</label><input id="rvName" maxlength="60" required /></div>
+    <div><label class="fl" for="rvOrg">Role or company <span class="muted">(optional)</span></label><input id="rvOrg" maxlength="80" placeholder="e.g. Designer at Acme" /></div>
+  </div>
+  <label class="fl" for="rvQuote">Your review</label>
+  <textarea id="rvQuote" rows="4" maxlength="600" required placeholder="What do you use, and what do you like about it?"></textarea>
+  <label class="fl" for="rvImprove">What could be better? <span class="muted">(private, only we see this)</span></label>
+  <textarea id="rvImprove" rows="3" maxlength="600"></textarea>
+  <button class="btn primary" type="submit" style="margin-top:14px">Send review</button>
+</form>
+</main>
+<footer class="foot" id="site-foot-static">
+  <div class="row wrap" style="justify-content:center;gap:6px 16px;margin-bottom:8px">
+    <a href="/blog">Blog</a><a href="/support">Support</a><a href="/refer">Refer &amp; earn</a>
+    <a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a><a href="/refunds">Refund Policy</a>
+  </div>
+  © 2026 dashovia.café · apps, served fresh · <a href="mailto:contact@dashovia.app">contact@dashovia.app</a>
+</footer>
+<script src="/assets/common.js"></script>
+<script>
+  let rating = 0;
+  const stars = document.querySelectorAll('#rvStars button');
+  const paint = () => stars.forEach((b) => b.classList.toggle('on', Number(b.dataset.v) <= rating));
+  stars.forEach((b) => b.addEventListener('click', () => { rating = Number(b.dataset.v); paint(); }));
+  document.getElementById('rvSignIn').addEventListener('click', () => Cafe.openSignIn());
+
+  Cafe.onUser(async (u) => {
+    document.getElementById('rvSignedOut').hidden = !!u;
+    document.getElementById('rvForm').hidden = !u;
+    if (!u) return;
+    document.getElementById('rvName').value = u.name || '';
+    try {
+      const { review } = await Cafe.api('/api/reviews/mine');
+      if (review) {
+        rating = review.rating; paint();
+        document.getElementById('rvName').value = review.name;
+        document.getElementById('rvOrg').value = review.org || '';
+        document.getElementById('rvQuote').value = review.quote;
+        document.getElementById('rvImprove').value = review.improve || '';
+        const st = document.getElementById('rvStatus');
+        st.hidden = false;
+        st.className = 'chip ' + (review.approved ? 'ok' : 'flame');
+        st.textContent = review.approved ? '✅ Your review is live. Editing it sends it back for approval.' : '⏳ Your review is waiting for approval.';
+      }
+    } catch {}
+  });
+
+  document.getElementById('rvForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!rating) return Cafe.toast('Please pick a star rating.', 'bad');
+    const btn = e.submitter; btn.disabled = true;
+    try {
+      await Cafe.api('/api/reviews', {
+        rating, name: document.getElementById('rvName').value, org: document.getElementById('rvOrg').value,
+        quote: document.getElementById('rvQuote').value, improve: document.getElementById('rvImprove').value,
+      });
+      Cafe.toast('Thank you! Your review will appear once it’s approved. 💜', 'ok');
+      const st = document.getElementById('rvStatus');
+      st.hidden = false; st.className = 'chip flame'; st.textContent = '⏳ Your review is waiting for approval.';
+    } catch (err) { Cafe.toast(err.message, 'bad'); }
+    btn.disabled = false;
+  });
+</script>
+</body>
+</html>

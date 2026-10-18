@@ -11,6 +11,9 @@
 //   POST /api/checkout        → create a Dodo Payments checkout session
 //   POST /api/portal          → link to the Dodo customer portal (manage subscription)
 //   POST /api/webhooks/dodo   → receive signed Dodo Payments events
+//   GET/POST /api/reviews     → public approved reviews / submit your own
+//   GET/POST /api/refunds     → your refundable payments / request a refund
+//   /api/admin/*              → admin dashboard (ADMIN_EMAILS only)
 //   everything else           → static files from the repo root
 //
 // Sessions are signed cookies, so no database is needed for sign-in.
@@ -21,6 +24,7 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 const crypto = require('crypto');
+const createStore = require('./store');
 
 const ROOT = __dirname;
 const PORT = process.env.PORT || 3000;
@@ -50,7 +54,7 @@ const TYPES = {
 // Never serve these over HTTP (server internals / deploy config).
 const BLOCKED = new Set([
   'server.js', 'package.json', 'package-lock.json',
-  'render.yaml', 'netlify.toml', 'vercel.json', 'README.md', 'LICENSE',
+  'render.yaml', 'netlify.toml', 'vercel.json', 'README.md', 'LICENSE', 'store.js',
 ]);
 
 const SECURITY_HEADERS = {
@@ -130,11 +134,39 @@ function sessionCookie(req, user) {
 function refCode(email) {
   return crypto.createHash('sha256').update('dashovia-ref:' + String(email).toLowerCase()).digest('hex').slice(0, 8);
 }
+// ---------------- Store + admin ----------------
+const store = createStore(ROOT);
+const ADMIN_EMAILS = (env.ADMIN_EMAILS || 'meetjethwa3@gmail.com')
+  .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
+const isAdmin = (u) => !!(u && u.email && ADMIN_EMAILS.includes(u.email.toLowerCase()));
+
 function publicUser(u) {
-  return u ? { ...u, refCode: u.email ? refCode(u.email) : '' } : null;
+  return u ? { ...u, refCode: u.email ? refCode(u.email) : '', isAdmin: isAdmin(u) } : null;
+}
+// Remember everyone who signs in (for the admin sign-up list and referral lookups).
+async function recordUser(u) {
+  const id = u.email.toLowerCase();
+  const prev = (await store.get('user', id)) || {};
+  const now = new Date().toISOString();
+  await store.put('user', id, {
+    email: u.email, name: u.name || '', provider: u.provider, picture: u.picture || '',
+    refCode: refCode(u.email), first_seen: prev.first_seen || now, last_seen: now,
+    sign_ins: (prev.sign_ins || 0) + 1,
+  });
 }
 function startSession(req, res, user) {
+  recordUser(user).catch((e) => console.error('Could not record user', e.message));
   sendJson(res, 200, { user: publicUser(user) }, { 'Set-Cookie': sessionCookie(req, user) });
+}
+function requireUser(req, res) {
+  const u = getSession(req);
+  if (!u || !u.email) { sendJson(res, 401, { error: 'Please sign in first.' }); return null; }
+  return u;
+}
+function requireAdmin(req, res) {
+  const u = getSession(req);
+  if (!isAdmin(u)) { sendJson(res, u ? 403 : 401, { error: u ? 'Admins only.' : 'Please sign in as an admin.' }); return null; }
+  return u;
 }
 
 // ---------------- Google ----------------
@@ -306,35 +338,257 @@ function verifyDodoSignature(headers, rawBody) {
   });
 }
 
-// The Dodo account is shared with other sites, so only keep events for café products.
-function isCafeEvent(d) {
-  const ours = new Set(PRODUCT_KEYS.map((k) => env['DODO_PRODUCT_' + k]).filter(Boolean));
-  const ids = [d.product_id, ...((d.product_cart || []).map((i) => i && i.product_id))].filter(Boolean);
-  return ids.some((id) => ours.has(id));
+// ---------------- Dodo data (source of truth for sales) ----------------
+const PRODUCT_LABEL = {
+  CUTTING_MONTHLY: 'Cutting Chai · monthly', CUTTING_ANNUAL: 'Cutting Chai · annual',
+  KETTLE_MONTHLY: 'Full Kettle · monthly', KETTLE_ANNUAL: 'Full Kettle · annual', KADAK: 'Kadak (one-time)',
+};
+const cafeProducts = () => PRODUCT_KEYS.filter((k) => env['DODO_PRODUCT_' + k])
+  .map((k) => ({ key: k, id: env['DODO_PRODUCT_' + k], label: PRODUCT_LABEL[k], recurring: k !== 'KADAK' }));
+
+async function dodoGet(p) {
+  const r = await dodo(p);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error('Dodo ' + r.status + ' on ' + p.split('?')[0]);
+  return d;
+}
+async function dodoListAll(p, params) {
+  const out = [];
+  for (let page = 0; page < 20; page++) {
+    const q = new URLSearchParams({ ...params, page_size: '100', page_number: String(page) });
+    const d = await dodoGet(p + '?' + q);
+    const items = d.items || [];
+    out.push(...items);
+    if (items.length < 100) break;
+  }
+  return out;
+}
+// Payments for café products only (the Dodo account is shared with other sites).
+async function cafePayments(extra = {}) {
+  const seen = new Map();
+  for (const prod of cafeProducts()) {
+    for (const p of await dodoListAll('/payments', { product_id: prod.id, ...extra })) {
+      if (!seen.has(p.payment_id)) seen.set(p.payment_id, { ...p, _product: prod });
+    }
+  }
+  return [...seen.values()].sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+}
+async function cafeSubscriptions() {
+  const all = [];
+  for (const prod of cafeProducts().filter((x) => x.recurring)) {
+    for (const s of await dodoListAll('/subscriptions', { product_id: prod.id })) all.push({ ...s, _product: prod });
+  }
+  return all;
+}
+async function dodoCustomerId(email) {
+  const d = await dodoGet('/customers?email=' + encodeURIComponent(email));
+  const c = (d.items || []).find((x) => String(x.email).toLowerCase() === email.toLowerCase());
+  return c ? c.customer_id : null;
+}
+const REFUND_DAYS = 14;
+const withinRefundWindow = (p) => Date.now() - new Date(p.created_at).getTime() < REFUND_DAYS * 864e5;
+
+// ---------------- Reviews ----------------
+const cleanText = (v, max) => String(v || '').replace(/\s+/g, ' ').trim().slice(0, max);
+
+async function listPublicReviews(req, res) {
+  const rows = await store.list('review');
+  const reviews = rows.filter((r) => r.data.approved).map((r) => ({
+    name: r.data.name, org: r.data.org, rating: r.data.rating, quote: r.data.quote, at: r.data.updated_at || r.created_at,
+  }));
+  return sendJson(res, 200, { reviews });
+}
+async function myReview(req, res) {
+  const u = requireUser(req, res); if (!u) return;
+  const r = await store.get('review', u.email.toLowerCase());
+  return sendJson(res, 200, { review: r });
+}
+async function submitReview(req, res) {
+  const u = requireUser(req, res); if (!u) return;
+  const b = await readJson(req);
+  const rating = Math.round(Number(b && b.rating));
+  const quote = cleanText(b && b.quote, 600);
+  if (!(rating >= 1 && rating <= 5)) return sendJson(res, 400, { error: 'Please pick a rating from 1 to 5 stars.' });
+  if (quote.length < 10) return sendJson(res, 400, { error: 'Please write at least a sentence.' });
+  const id = u.email.toLowerCase();
+  const prev = await store.get('review', id);
+  await store.put('review', id, {
+    email: u.email, name: cleanText(b.name, 60) || u.name || u.email.split('@')[0],
+    org: cleanText(b.org, 80), rating, quote, improve: cleanText(b.improve, 600),
+    approved: false, // every new or edited review waits for an admin
+    created_at: prev ? prev.created_at : new Date().toISOString(), updated_at: new Date().toISOString(),
+  });
+  return sendJson(res, 200, { ok: true });
 }
 
-// Paid customers are kept in data/customers.json (email → latest status).
-// On Render's free plan the disk resets on each deploy; Dodo's dashboard stays
-// the source of truth (every order there also carries plan + referrer metadata).
-const DATA_FILE = path.join(ROOT, 'data', 'customers.json');
-function recordCustomer(event) {
-  const d = event.data || {};
-  const email = (d.customer && d.customer.email) || '';
-  if (!email || !isCafeEvent(d)) return;
-  let db = {};
-  try { db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch { /* first write */ }
-  db[email.toLowerCase()] = {
-    event: event.type,
-    status: d.status || '',
-    plan: (d.metadata && d.metadata.plan) || '',
-    referrer: (d.metadata && d.metadata.referrer) || '',
-    product_id: d.product_id || ((d.product_cart || [])[0] || {}).product_id || '',
-    subscription_id: d.subscription_id || '',
-    payment_id: d.payment_id || '',
-    at: event.timestamp || new Date().toISOString(),
+// ---------------- Refund requests ----------------
+async function refundOptions(req, res) {
+  const u = requireUser(req, res); if (!u) return;
+  if (!env.DODO_PAYMENTS_API_KEY) return sendJson(res, 503, { error: 'Payments are not set up yet.' });
+  const requests = (await store.list('refund')).filter((r) => r.data.email.toLowerCase() === u.email.toLowerCase()).map((r) => r.data);
+  const cid = await dodoCustomerId(u.email);
+  const payments = cid ? (await cafePayments({ customer_id: cid })).filter((p) => p.status === 'succeeded') : [];
+  return sendJson(res, 200, {
+    days: REFUND_DAYS,
+    requests,
+    payments: payments.map((p) => ({
+      payment_id: p.payment_id, product: p._product.label, amount: p.total_amount, currency: p.currency,
+      created_at: p.created_at, eligible: withinRefundWindow(p) && !p.refund_status
+        && !requests.some((r) => r.payment_id === p.payment_id && r.status !== 'declined'),
+    })),
+  });
+}
+async function requestRefund(req, res) {
+  const u = requireUser(req, res); if (!u) return;
+  const b = await readJson(req);
+  const paymentId = String((b && b.payment_id) || '');
+  const reason = cleanText(b && b.reason, 800);
+  if (!/^pay_[A-Za-z0-9]+$/.test(paymentId)) return sendJson(res, 400, { error: 'Pick the payment to refund.' });
+  const cid = await dodoCustomerId(u.email);
+  const p = cid ? (await cafePayments({ customer_id: cid })).find((x) => x.payment_id === paymentId) : null;
+  if (!p || p.status !== 'succeeded') return sendJson(res, 404, { error: 'We couldn’t find that payment on your account.' });
+  if (!withinRefundWindow(p)) return sendJson(res, 400, { error: `That payment is older than ${REFUND_DAYS} days.` });
+  const existing = (await store.list('refund')).find((r) => r.data.payment_id === paymentId && r.data.status !== 'declined');
+  if (existing) return sendJson(res, 409, { error: 'You’ve already asked for a refund on this payment.' });
+  const id = crypto.randomUUID();
+  await store.put('refund', id, {
+    id, email: u.email, name: u.name || '', payment_id: paymentId, product: p._product.label,
+    amount: p.total_amount, currency: p.currency, paid_at: p.created_at, reason,
+    status: 'new', requested_at: new Date().toISOString(),
+  });
+  return sendJson(res, 200, { ok: true });
+}
+
+// ---------------- Admin ----------------
+let summaryCache = { at: 0, data: null };
+async function adminSummary(req, res) {
+  if (!requireAdmin(req, res)) return;
+  const users = await store.list('user');
+  const base = {
+    users: users.length,
+    signups_7d: users.filter((r) => Date.now() - new Date(r.data.first_seen).getTime() < 7 * 864e5).length,
+    recent: users.slice(0, 50).map((r) => r.data),
+    reviews_pending: (await store.list('review')).filter((r) => !r.data.approved).length,
+    refunds_new: (await store.list('refund')).filter((r) => r.data.status === 'new').length,
+    store: store.kind,
   };
-  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-  fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
+  if (!env.DODO_PAYMENTS_API_KEY) return sendJson(res, 200, { ...base, dodo: null, dodo_error: 'DODO_PAYMENTS_API_KEY is not set.' });
+  try {
+    if (!summaryCache.data || Date.now() - summaryCache.at > 60e3) {
+      const [subs, pays] = await Promise.all([cafeSubscriptions(), cafePayments()]);
+      const succeeded = pays.filter((p) => p.status === 'succeeded');
+      const revenue = {};
+      succeeded.forEach((p) => { revenue[p.currency] = (revenue[p.currency] || 0) + p.total_amount; });
+      const byPlan = {};
+      cafeProducts().forEach((x) => { byPlan[x.label] = 0; });
+      subs.filter((x) => x.status === 'active').forEach((x) => { byPlan[x._product.label]++; });
+      byPlan[PRODUCT_LABEL.KADAK] = succeeded.filter((p) => p._product.key === 'KADAK').length;
+      const onTrial = (x) => x.status === 'active' && x.trial_period_days
+        && Date.now() < new Date(x.created_at).getTime() + x.trial_period_days * 864e5;
+      summaryCache = { at: Date.now(), data: {
+        active: subs.filter((x) => x.status === 'active' && !onTrial(x)).length,
+        trial: subs.filter(onTrial).length,
+        cancelled: subs.filter((x) => ['cancelled', 'expired'].includes(x.status)).length,
+        revenue, payments: succeeded.length, by_plan: byPlan,
+        recent_payments: pays.slice(0, 20).map((p) => ({
+          payment_id: p.payment_id, email: p.customer && p.customer.email, product: p._product.label,
+          amount: p.total_amount, currency: p.currency, status: p.status, refund_status: p.refund_status || '',
+          referrer: (p.metadata && p.metadata.referrer) || '', created_at: p.created_at,
+        })),
+      } };
+    }
+    return sendJson(res, 200, { ...base, dodo: summaryCache.data });
+  } catch (e) {
+    return sendJson(res, 200, { ...base, dodo: null, dodo_error: e.message });
+  }
+}
+
+async function adminUsersCsv(req, res) {
+  if (!requireAdmin(req, res)) return;
+  const users = await store.list('user');
+  const cell = (v) => {
+    let s = String(v == null ? '' : v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // keep spreadsheets from running formulas
+    return '"' + s.replace(/"/g, '""') + '"';
+  };
+  const cols = ['email', 'name', 'provider', 'refCode', 'first_seen', 'last_seen', 'sign_ins'];
+  const csv = [cols.join(','), ...users.map((r) => cols.map((c) => cell(r.data[c])).join(','))].join('\n');
+  send(res, 200, csv, {
+    'Content-Type': 'text/csv; charset=utf-8', 'Cache-Control': 'no-store',
+    'Content-Disposition': 'attachment; filename="dashovia-cafe-users.csv"',
+  });
+}
+
+async function adminListReviews(req, res) {
+  if (!requireAdmin(req, res)) return;
+  return sendJson(res, 200, { reviews: (await store.list('review')).map((r) => ({ id: r.id, ...r.data })) });
+}
+async function adminReviewAction(req, res, id) {
+  if (!requireAdmin(req, res)) return;
+  const b = await readJson(req);
+  const r = await store.get('review', id);
+  if (!r) return sendJson(res, 404, { error: 'Review not found.' });
+  const act = b && b.action;
+  if (act === 'delete') await store.del('review', id);
+  else if (act === 'approve' || act === 'hide') await store.put('review', id, { ...r, approved: act === 'approve' });
+  else return sendJson(res, 400, { error: 'Unknown action.' });
+  return sendJson(res, 200, { ok: true });
+}
+
+async function adminListRefunds(req, res) {
+  if (!requireAdmin(req, res)) return;
+  return sendJson(res, 200, { refunds: (await store.list('refund')).map((r) => r.data) });
+}
+async function adminRefundAction(req, res, id) {
+  const admin = requireAdmin(req, res); if (!admin) return;
+  const b = await readJson(req);
+  const r = await store.get('refund', id);
+  if (!r) return sendJson(res, 404, { error: 'Request not found.' });
+  const act = b && b.action;
+  if (act === 'decline' || act === 'reopen') {
+    await store.put('refund', id, { ...r, status: act === 'decline' ? 'declined' : 'new', handled_by: admin.email, handled_at: new Date().toISOString() });
+    return sendJson(res, 200, { ok: true });
+  }
+  if (act !== 'refund') return sendJson(res, 400, { error: 'Unknown action.' });
+  if (r.status === 'refunded' || r.status === 'processing') return sendJson(res, 409, { error: 'This refund was already issued.' });
+  try {
+    const resp = await dodo('/refunds', { method: 'POST', body: JSON.stringify({ payment_id: r.payment_id, reason: (r.reason || 'Customer request').slice(0, 300) }) });
+    const d = await resp.json().catch(() => ({}));
+    if (!resp.ok) return sendJson(res, 502, { error: 'Dodo refused the refund' + (d.message ? ': ' + d.message : '.') });
+    await store.put('refund', id, { ...r, status: d.status === 'succeeded' ? 'refunded' : 'processing', refund_id: d.refund_id || '',
+      handled_by: admin.email, handled_at: new Date().toISOString() });
+    summaryCache.at = 0;
+    return sendJson(res, 200, { ok: true, status: d.status });
+  } catch {
+    return sendJson(res, 502, { error: 'Could not reach Dodo.' });
+  }
+}
+
+async function adminReferrals(req, res) {
+  if (!requireAdmin(req, res)) return;
+  if (!env.DODO_PAYMENTS_API_KEY) return sendJson(res, 200, { referrals: [] });
+  try {
+    const owners = {};
+    (await store.list('user')).forEach((r) => { owners[r.data.refCode] = r.data.email; });
+    const rewards = {};
+    (await store.list('reward')).forEach((r) => { rewards[r.id] = r.data; });
+    const referred = (await cafePayments()).filter((p) => p.metadata && p.metadata.referrer && p.status === 'succeeded');
+    return sendJson(res, 200, { referrals: referred.map((p) => ({
+      payment_id: p.payment_id, buyer: p.customer && p.customer.email, product: p._product.label,
+      amount: p.total_amount, currency: p.currency, created_at: p.created_at, refunded: !!p.refund_status,
+      code: p.metadata.referrer, referrer: owners[p.metadata.referrer] || '', rewarded: !!rewards[p.payment_id],
+      reward_ready: !withinRefundWindow(p) && !p.refund_status,
+    })) });
+  } catch (e) {
+    return sendJson(res, 502, { error: e.message });
+  }
+}
+async function adminRewardAction(req, res, paymentId) {
+  const admin = requireAdmin(req, res); if (!admin) return;
+  const b = await readJson(req);
+  if (b && b.rewarded) await store.put('reward', paymentId, { by: admin.email, at: new Date().toISOString() });
+  else await store.del('reward', paymentId);
+  return sendJson(res, 200, { ok: true });
 }
 
 async function dodoWebhook(req, res) {
@@ -342,9 +596,18 @@ async function dodoWebhook(req, res) {
   if (!verifyDodoSignature(req.headers, raw)) return sendJson(res, 401, { error: 'Invalid signature.' });
   let event;
   try { event = JSON.parse(raw); } catch { return sendJson(res, 400, { error: 'Invalid JSON.' }); }
-  if (/^(payment|subscription)\./.test(event.type || '')) {
-    try { recordCustomer(event); } catch (err) { console.error('Could not record customer', err); }
-  }
+  const d = event.data || {};
+  try {
+    if (/^(payment|subscription|refund)\./.test(event.type || '')) summaryCache.at = 0;
+    // When Dodo confirms a refund, mark the matching request as refunded.
+    if ((event.type === 'refund.succeeded' || event.type === 'refund.failed') && d.payment_id) {
+      for (const r of await store.list('refund')) {
+        if (r.data.payment_id === d.payment_id && r.data.status !== 'declined') {
+          await store.put('refund', r.id, { ...r.data, status: event.type === 'refund.succeeded' ? 'refunded' : 'failed' });
+        }
+      }
+    }
+  } catch (err) { console.error('Webhook handling failed', err.message); }
   return sendJson(res, 200, { received: true });
 }
 
@@ -370,6 +633,7 @@ function serveStatic(req, res, pathname) {
   if (base.startsWith('.') || BLOCKED.has(base)
       || filePath.startsWith(path.join(ROOT, 'node_modules'))
       || filePath.startsWith(path.join(ROOT, 'data'))
+      || filePath.startsWith(path.join(ROOT, 'scripts'))
       || filePath.startsWith(path.join(ROOT, '.git'))) {
     return send(res, 404, 'Not found');
   }
@@ -385,28 +649,54 @@ function serveStatic(req, res, pathname) {
 }
 
 // ---------------- Router ----------------
-const server = http.createServer((req, res) => {
+const ROUTES = {
+  'GET /api/config': (req, res) => sendJson(res, 200, { googleClientId: env.GOOGLE_CLIENT_ID || '', githubClientId: env.GITHUB_CLIENT_ID || '' }),
+  'GET /api/me': (req, res) => sendJson(res, 200, { user: publicUser(getSession(req)) }),
+  'POST /api/auth/google': googleSignIn,
+  'POST /api/auth/github': githubSignIn,
+  'POST /api/auth/logout': (req, res) => sendJson(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(req, null) }),
+  'POST /api/checkout': createCheckout,
+  'POST /api/portal': customerPortal,
+  'POST /api/webhooks/dodo': dodoWebhook,
+  'GET /api/reviews': listPublicReviews,
+  'GET /api/reviews/mine': myReview,
+  'POST /api/reviews': submitReview,
+  'GET /api/refunds': refundOptions,
+  'POST /api/refunds': requestRefund,
+  'GET /api/admin/summary': adminSummary,
+  'GET /api/admin/users.csv': adminUsersCsv,
+  'GET /api/admin/reviews': adminListReviews,
+  'GET /api/admin/refunds': adminListRefunds,
+  'GET /api/admin/referrals': adminReferrals,
+};
+const PARAM_ROUTES = [
+  [/^POST \/api\/admin\/reviews\/([^/]+)$/, adminReviewAction],
+  [/^POST \/api\/admin\/refunds\/([^/]+)$/, adminRefundAction],
+  [/^POST \/api\/admin\/referrals\/([^/]+)$/, adminRewardAction],
+];
+
+const server = http.createServer(async (req, res) => {
   let u;
   try { u = new URL(req.url, 'http://localhost'); } catch { return send(res, 400, 'Bad request'); }
   const { pathname } = u;
   const route = req.method + ' ' + pathname;
-
-  switch (route) {
-    case 'GET /api/config':
-      return sendJson(res, 200, { googleClientId: env.GOOGLE_CLIENT_ID || '', githubClientId: env.GITHUB_CLIENT_ID || '' });
-    case 'GET /api/me':
-      return sendJson(res, 200, { user: publicUser(getSession(req)) });
-    case 'POST /api/auth/google': return googleSignIn(req, res);
-    case 'POST /api/auth/github': return githubSignIn(req, res);
-    case 'POST /api/auth/logout':
-      return sendJson(res, 200, { ok: true }, { 'Set-Cookie': sessionCookie(req, null) });
-    case 'POST /api/checkout': return createCheckout(req, res);
-    case 'POST /api/portal': return customerPortal(req, res);
-    case 'POST /api/webhooks/dodo': return dodoWebhook(req, res);
+  try {
+    if (ROUTES[route]) return await ROUTES[route](req, res);
+    for (const [re, fn] of PARAM_ROUTES) {
+      const m = route.match(re);
+      if (m) return await fn(req, res, decodeURIComponent(m[1]));
+    }
+  } catch (err) {
+    console.error('Error on', route, err);
+    if (!res.headersSent) return sendJson(res, 500, { error: 'Something went wrong. Please try again.' });
+    return;
   }
   if (pathname.startsWith('/api/')) return sendJson(res, 404, { error: 'Not found' });
   if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Method not allowed');
   return serveStatic(req, res, pathname);
 });
 
-server.listen(PORT, () => console.log('dashovia.café listening on :' + PORT));
+store.init()
+  .then(() => console.log('Store ready (' + store.kind + ')'))
+  .catch((e) => console.error('Store failed to start:', e.message))
+  .finally(() => server.listen(PORT, () => console.log('dashovia.café listening on :' + PORT)));

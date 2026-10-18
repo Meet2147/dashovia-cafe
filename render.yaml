@@ -45,3 +45,10 @@ services:
         generateValue: true
       - key: REFERRAL_DISCOUNT_CODE
         value: CAFEFRIEND20
+      # Admin + database (reviews, refund requests, sign-ups, referral rewards).
+      # DATABASE_URL is the café's own restricted login made by scripts/setup-db.js
+      # inside CodeStreak's Postgres (schema "cafe"). Never the CodeStreak owner URL.
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_EMAILS
+        value: meetjethwa3@gmail.com
